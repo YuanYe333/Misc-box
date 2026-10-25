@@ -1,0 +1,1266 @@
+{
+  "meta": {
+    "name": "杂项工具箱",
+    "name_en": "MiscBox",
+    "version": "1.0.0",
+    "updated": "2026-10-24",
+    "root": "",
+    "description": "CTF 杂项（Misc）一站式工具箱：环境配置、编码识别、隐写、压缩包与文件修复、流量分析、取证、OSINT。",
+    "author": "",
+    "license": "MIT (框架与文档)；各第三方工具遵循其自身许可"
+  },
+  "categories": [
+    {
+      "id": "env",
+      "index": 1,
+      "name": "环境配置",
+      "icon": "⚙",
+      "desc": "一键自检运行时依赖、补齐缺失组件、生成环境报告。开箱前先跑这一页。",
+      "guide": "01-环境配置/README.md"
+    },
+    {
+      "id": "code",
+      "index": 2,
+      "name": "编码识别",
+      "icon": "🔤",
+      "desc": "乱码、Base 家族、古典密码、各类怪异编码的识别与链式解码。",
+      "guide": "02-编码识别/README.md"
+    },
+    {
+      "id": "stego",
+      "index": 3,
+      "name": "隐写",
+      "icon": "🖼",
+      "desc": "图片位平面/帧/通道分析、元数据、PNG 结构校验、长宽篡改检测。",
+      "guide": "03-隐写/README.md"
+    },
+    {
+      "id": "archive",
+      "index": 4,
+      "name": "压缩包与文件修复",
+      "icon": "📦",
+      "desc": "伪加密、分卷、嵌套包、口令爆破、文件头修复、哈希提取。",
+      "guide": "04-压缩包与文件修复/README.md"
+    },
+    {
+      "id": "traffic",
+      "index": 5,
+      "name": "流量分析",
+      "icon": "🌐",
+      "desc": "pcap 解析、协议统计、流提取、HTTP/DNS/TLS 取证、端口扫描。",
+      "guide": "05-流量分析/README.md"
+    },
+    {
+      "id": "forensics",
+      "index": 6,
+      "name": "取证",
+      "icon": "🔍",
+      "desc": "固件/镜像签名扫描、文件雕刻恢复、内存取证、元数据与磁盘取证。",
+      "guide": "06-取证/README.md"
+    },
+    {
+      "id": "osint",
+      "index": 7,
+      "name": "OSINT",
+      "icon": "🕵",
+      "desc": "域名/邮箱/子域收集、DNS/WHOIS/证书查询、公开信息聚合。",
+      "guide": "07-OSINT/README.md"
+    }
+  ],
+  "tools": [
+    {
+      "id": "setup",
+      "category": "env",
+      "name": "环境自检",
+      "name_en": "MiscBox Setup",
+      "version": "1.0.0",
+      "type": "internal",
+      "path": "_box/setup.ps1",
+      "launch": {
+        "kind": "powershell",
+        "target": "_box/setup.ps1",
+        "args": [],
+        "workdir": "_box"
+      },
+      "summary": "一键探测本机运行时与全部工具是否就绪，输出红黄绿清单并生成环境报告。",
+      "when": "第一次使用工具箱、换电脑、重装系统、或某个工具突然打不开时。",
+      "usage": [
+        {
+          "title": "图形方式",
+          "steps": [
+            "双击 _box\\启动器.bat",
+            "左侧点「环境配置」→ 卡片「环境自检」→「打开工具」",
+            "或直接双击 _box\\检查环境.bat"
+          ]
+        },
+        {
+          "title": "命令行",
+          "code": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\杂项工具\\_box\\setup.ps1\""
+        }
+      ],
+      "params": [
+        {
+          "flag": "-Fix",
+          "desc": "对可自动补齐的缺失项执行安装（会逐项询问）"
+        },
+        {
+          "flag": "-Json",
+          "desc": "以 JSON 输出，便于脚本消费"
+        },
+        {
+          "flag": "-Quiet",
+          "desc": "只输出问题项，不打印全量清单"
+        }
+      ],
+      "pitfalls": [
+        "本机 PowerShell 执行策略较严，.ps1 需用 -ExecutionPolicy Bypass 运行",
+        "脚本正文含中文时务必保存为 UTF-8 with BOM，否则 PS 5.1 按 GBK 读会报语法错误",
+        "pip 自我升级（pip install --upgrade pip）在本机曾出现长时间空转，建议跳过"
+      ],
+      "next": [
+        "code",
+        "stego"
+      ]
+    },
+    {
+      "id": "python-runtime",
+      "category": "env",
+      "name": "Python 运行时",
+      "name_en": "Python",
+      "version": "3.14.8 / 3.12.10",
+      "type": "runtime",
+      "path": "%LOCALAPPDATA%/Python/pythoncore-3.14-64/python.exe",
+      "launch": {
+        "kind": "none"
+      },
+      "summary": "工具箱内自研脚本与 Python 系工具的基础运行时，两个版本并存。",
+      "when": "运行 _脚本/imgsize.py、CyberChef 之外的本地 Python 工具时。",
+      "usage": [
+        {
+          "title": "3.14（主运行时，含 Pillow）",
+          "code": "C:\\Users\\1\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -X utf8 脚本.py"
+        },
+        {
+          "title": "3.12（D:\\websec\\python，供 binwalk/volatility3/theHarvester 虚拟环境）",
+          "code": "D:\\websec\\python\\python.exe -V"
+        }
+      ],
+      "params": [],
+      "pitfalls": [
+        "调用 Python 脚本务必加 -X utf8，否则中文路径与中文输出会乱码",
+        "不要把 binwalk 装进系统 Python，它有自己的独立虚拟环境"
+      ],
+      "next": []
+    },
+    {
+      "id": "java-runtime",
+      "category": "env",
+      "name": "Java 运行时",
+      "name_en": "OpenJDK",
+      "version": "17",
+      "type": "runtime",
+      "path": "C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/java.exe",
+      "launch": {
+        "kind": "none"
+      },
+      "summary": "StegSolve、部分 JAR 版工具的依赖。",
+      "when": "StegSolve 双击无反应，或提示找不到 java 时。",
+      "usage": [
+        {
+          "title": "验证",
+          "code": "java -version"
+        }
+      ],
+      "params": [],
+      "pitfalls": [
+        "StegSolve 需要 Java 8+，本机 17 可用"
+      ],
+      "next": [
+        "stegsolve"
+      ]
+    },
+    {
+      "id": "7zip",
+      "category": "archive",
+      "name": "7-Zip",
+      "name_en": "7-Zip",
+      "version": "26.03（系统）/ 24.09（便携）",
+      "type": "cli-gui",
+      "path": "CTF-tools/7zip/7z.exe",
+      "alt_paths": [
+        "C:/Program Files/7-Zip/7z.exe"
+      ],
+      "launch": {
+        "kind": "dir",
+        "target": "CTF-tools/7zip"
+      },
+      "summary": "解压/打包 zip、7z、rar、tar；处理伪加密、分卷、嵌套压缩包。",
+      "when": "拿到压缩包第一步永远是 `7z l` 看结构，而不是直接解压。",
+      "usage": [
+        {
+          "title": "列目录（不解压）",
+          "code": "7z l 题目.zip"
+        },
+        {
+          "title": "解压到指定目录",
+          "code": "7z x 题目.zip -o输出"
+        },
+        {
+          "title": "带密码解压",
+          "code": "7z x -p密码 题目.zip"
+        },
+        {
+          "title": "测试完整性",
+          "code": "7z t 题目.zip"
+        },
+        {
+          "title": "只解某个文件",
+          "code": "7z x 题目.zip flag.txt"
+        },
+        {
+          "title": "查看是否加密（伪加密判断）",
+          "code": "7z l -slt 题目.zip | findstr /i \"Encrypted Method\""
+        }
+      ],
+      "params": [
+        {
+          "flag": "l",
+          "desc": "列出内容（含 CRC、加密标记）"
+        },
+        {
+          "flag": "x",
+          "desc": "解压并保留目录结构"
+        },
+        {
+          "flag": "e",
+          "desc": "解压到当前目录（丢弃路径）"
+        },
+        {
+          "flag": "t",
+          "desc": "完整性测试"
+        },
+        {
+          "flag": "-p",
+          "desc": "指定密码，-p 后直接跟密码"
+        },
+        {
+          "flag": "-o",
+          "desc": "指定输出目录（注意 -o 后无空格）"
+        },
+        {
+          "flag": "-slt",
+          "desc": "技术信息详细列表"
+        }
+      ],
+      "pitfalls": [
+        "-o 与路径之间不能有空格：-o输出 而非 -o 输出",
+        "中文密码/中文路径在命令行下需 UTF-8 控制台，建议用 Windows Terminal",
+        "CTF-tools/7zip 是 24.09 便携副本，系统另有 26.03，两者都能用"
+      ],
+      "next": [
+        "archpr",
+        "john",
+        "hashcat"
+      ]
+    },
+    {
+      "id": "archpr",
+      "category": "archive",
+      "name": "ARCHPR",
+      "name_en": "Advanced Archive Password Recovery",
+      "version": "4.66",
+      "type": "gui",
+      "path": "ARCHPR/ARCHPR.loader.exe",
+      "launch": {
+        "kind": "exe",
+        "target": "ARCHPR/ARCHPR.loader.exe",
+        "workdir": "ARCHPR"
+      },
+      "summary": "压缩包口令恢复：字典/掩码/暴力/明文攻击，图形界面直接选包。",
+      "when": "压缩包有密码且字典可能命中时；不想折腾 hashcat 提取哈希就用它。",
+      "usage": [
+        {
+          "title": "图形方式",
+          "steps": [
+            "双击 ARCHPR/ARCHPR.loader.exe",
+            "「打开」选压缩包 → 选「暴力」或「字典」",
+            "字典选 ARCHPR/dict/ 下的弱口令/拼音/键盘序，或根目录 dict.txt",
+            "「开始」等待结果"
+          ]
+        }
+      ],
+      "params": [
+        {
+          "flag": "字典攻击",
+          "desc": "按字典逐条尝试，最快"
+        },
+        {
+          "flag": "掩码攻击",
+          "desc": "已知格式（如 4 位数字）时极快"
+        },
+        {
+          "flag": "暴力攻击",
+          "desc": "穷举所有组合，慢但保证覆盖"
+        },
+        {
+          "flag": "明文攻击",
+          "desc": "已知包内某文件明文时可秒破 ZIP"
+        }
+      ],
+      "pitfalls": [
+        "本机这份是绿化版，目录内有历史 CrashLog，若启动崩溃可改用 hashcat 路线",
+        "中文界面：Options → Language → chinese_simp.lng",
+        "商业软件，仅限自有题目与授权场景；不要公开分发"
+      ],
+      "next": [
+        "john",
+        "hashcat"
+      ]
+    },
+    {
+      "id": "john",
+      "category": "archive",
+      "name": "John the Ripper",
+      "name_en": "John the Ripper jumbo",
+      "version": "1.9.0-jumbo-1",
+      "type": "cli",
+      "path": "john/john-1.9.0-jumbo-1-win64/run/john.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "john/john-1.9.0-jumbo-1-win64/run"
+      },
+      "summary": "提供 zip2john / rar2john / 7z2john 等哈希提取器，把加密压缩包转成 hashcat 能吃的哈希。",
+      "when": "要用 GPU（hashcat）跑压缩包口令时，先用它提取哈希。",
+      "usage": [
+        {
+          "title": "ZIP → 哈希",
+          "code": "cd D:\\杂项工具\\john\\john-1.9.0-jumbo-1-win64\\run\n.\\zip2john.exe D:\\work\\secret.zip > h.txt"
+        },
+        {
+          "title": "RAR → 哈希",
+          "code": ".\\rar2john.exe D:\\work\\secret.rar > h.txt"
+        },
+        {
+          "title": "7z → 哈希（需 Perl，见 perl 条目）",
+          "code": "perl 7z2john.pl D:\\work\\secret.7z > h.txt"
+        }
+      ],
+      "params": [
+        {
+          "flag": "zip2john",
+          "desc": "ZIP 提取（deflate/store 都支持）"
+        },
+        {
+          "flag": "rar2john",
+          "desc": "RAR3/RAR5 提取"
+        },
+        {
+          "flag": "7z2john.pl",
+          "desc": "7z 提取，Perl 脚本"
+        },
+        {
+          "flag": "office2john.py",
+          "desc": "Office 文档提取"
+        },
+        {
+          "flag": "pdf2john.pl",
+          "desc": "PDF 提取"
+        }
+      ],
+      "pitfalls": [
+        "zip2john 是 cygwin 编译，不支持中文路径，先复制到纯 ASCII 目录（如 D:\\work）",
+        "7z2john.pl 需要 Perl 且 PATH 要含 perl/bin，见工具箱 perl 条目",
+        "--potfile-path 传绝对路径会 Permission denied，用默认或相对路径"
+      ],
+      "next": [
+        "hashcat",
+        "perl"
+      ]
+    },
+    {
+      "id": "hashcat",
+      "category": "archive",
+      "name": "hashcat",
+      "name_en": "hashcat",
+      "version": "7.1.2",
+      "type": "cli",
+      "path": "hashcat/hashcat.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "hashcat"
+      },
+      "summary": "GPU 口令爆破：字典/掩码/规则/组合，支持 300+ 哈希类型。",
+      "when": "压缩包、Office、PDF、系统哈希等需要高速爆破时；本机 RTX 5060 实测 MD5 约 17345 MH/s。",
+      "usage": [
+        {
+          "title": "字典攻击（最常用）",
+          "code": "cd D:\\杂项工具\\hashcat\n.\\hashcat.exe -m 0 -a 0 hash.txt 字典.txt"
+        },
+        {
+          "title": "掩码爆破",
+          "code": ".\\hashcat.exe -m 0 -a 3 hash.txt ?a?a?a?a?a?a"
+        },
+        {
+          "title": "字典 + 规则变形",
+          "code": ".\\hashcat.exe -m 0 -a 0 hash.txt 字典.txt -r rules\\best66.rule"
+        },
+        {
+          "title": "字典 + 掩码混合",
+          "code": ".\\hashcat.exe -m 0 -a 6 hash.txt 字典.txt ?d?d"
+        },
+        {
+          "title": "逐位加长",
+          "code": ".\\hashcat.exe -m 0 -a 3 hash.txt ?a?a?a?a?a?a?a?a --increment --increment-min 1"
+        },
+        {
+          "title": "查看结果",
+          "code": ".\\hashcat.exe -m 0 hash.txt --show"
+        },
+        {
+          "title": "查哈希类型编号",
+          "code": ".\\hashcat.exe -m 17200 --example-hashes"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-m",
+          "desc": "哈希类型：0=MD5 100=SHA1 1400=SHA256 17200=PKZIP 17210=PKZIP-store 13000=RAR5 23700=RAR3 11600=7-Zip 10500=PDF"
+        },
+        {
+          "flag": "-a",
+          "desc": "攻击模式：0=字典 1=组合 3=掩码 6=字典+掩码 7=掩码+字典"
+        },
+        {
+          "flag": "--show / --left",
+          "desc": "查看已破解 / 未破解"
+        },
+        {
+          "flag": "--increment",
+          "desc": "掩码逐位加长"
+        },
+        {
+          "flag": "-O",
+          "desc": "优化内核，更快但密码长度受限（≤31）"
+        },
+        {
+          "flag": "-w",
+          "desc": "工作负载 1~4（默认 2，3 更激进）"
+        },
+        {
+          "flag": "-D 1",
+          "desc": "只用 GPU"
+        },
+        {
+          "flag": "--runtime",
+          "desc": "限时秒数后自动停止"
+        },
+        {
+          "flag": "--session + --restore",
+          "desc": "长任务断点续跑"
+        }
+      ],
+      "pitfalls": [
+        "必须在 hashcat 目录下运行，否则找不到 OpenCL/",
+        "hashcat 不能直接吃 .zip/.rar，必须先用 john 提取哈希",
+        "PKZIP deflate 用 17200，store 用 17210，选反会报 unsupported compression type",
+        "启动打印 CUDA SDK Toolkit not installed 并回退 OpenCL 属正常现象",
+        "--potfile-path 绝对路径在 Windows 版有 Permission denied 的 bug"
+      ],
+      "next": [
+        "john",
+        "hashcat-panel"
+      ]
+    },
+    {
+      "id": "hashcat-panel",
+      "category": "archive",
+      "name": "Hashcat 面板",
+      "name_en": "HashcatPanel",
+      "version": "1.0",
+      "type": "gui",
+      "path": "hashcat面板/程序/HashcatPanel.exe",
+      "launch": {
+        "kind": "exe",
+        "target": "hashcat面板/程序/HashcatPanel.exe",
+        "workdir": "hashcat面板/程序"
+      },
+      "summary": "hashcat 图形外壳：自动识别 -m、内置「压缩包 → 提取哈希」、实时进度与日志。",
+      "when": "不想记 -m 编号、或想一键完成 zip/rar 提取哈希再爆破。",
+      "usage": [
+        {
+          "title": "破解加密压缩包",
+          "steps": [
+            "双击 程序/HashcatPanel.exe",
+            "「压缩包」行选 .zip/.rar/.7z",
+            "点「提取哈希」→ 自动调 john 并选好 -m",
+            "选字典 → 「开始破解」→ 「查看结果」"
+          ]
+        }
+      ],
+      "params": [],
+      "pitfalls": [
+        "程序/ 整个文件夹必须保留，exe 依赖同目录 _internal/",
+        "7z 的 7z2john.pl 需 Perl；装了工具箱的 perl 条目即可用",
+        "中文路径会先自动转到临时 ASCII 目录处理"
+      ],
+      "next": [
+        "hashcat",
+        "john"
+      ]
+    },
+    {
+      "id": "perl",
+      "category": "archive",
+      "name": "Strawberry Perl",
+      "name_en": "Strawberry Perl portable",
+      "version": "5.42.3.1",
+      "type": "cli",
+      "path": "04-压缩包与文件修复/perl/perl/bin/perl.exe",
+      "launch": {
+        "kind": "shell",
+        "target": "04-压缩包与文件修复/perl/portableshell.bat"
+      },
+      "summary": "便携版 Perl，用于运行 john 的 7z2john.pl、pdf2john.pl 等 Perl 脚本。",
+      "when": "遇到 7z 加密包想走 hashcat -m 11600，或需要跑任何 .pl 脚本时。",
+      "usage": [
+        {
+          "title": "7z → 哈希（关键路径）",
+          "code": "$env:PATH = 'D:\\杂项工具\\04-压缩包与文件修复\\perl\\perl\\bin;D:\\杂项工具\\04-压缩包与文件修复\\perl\\c\\bin;' + $env:PATH\n& 'D:\\杂项工具\\04-压缩包与文件修复\\perl\\perl\\bin\\perl.exe' 'D:\\杂项工具\\john\\john-1.9.0-jumbo-1-win64\\run\\7z2john.pl' 'D:\\work\\secret.7z'"
+        },
+        {
+          "title": "验证环境",
+          "code": "perl -v"
+        }
+      ],
+      "params": [
+        {
+          "flag": "portableshell.bat",
+          "desc": "进入已配置好 PATH 的 Perl 交互环境（推荐）"
+        }
+      ],
+      "pitfalls": [
+        "必须把 perl/bin 和 c/bin 都加进 PATH，否则 XS 模块（Lzma.xs.dll）加载失败",
+        "Perl 的 XS 模块对中文路径敏感，必要时用纯 ASCII 路径或目录联接",
+        "本机原无 Perl，此条目为 2026-10 补齐，解锁了 7z2john"
+      ],
+      "next": [
+        "john",
+        "hashcat"
+      ]
+    },
+    {
+      "id": "cyberchef",
+      "category": "code",
+      "name": "CyberChef",
+      "name_en": "CyberChef",
+      "version": "11.5.0",
+      "type": "web",
+      "path": "02-编码识别/CyberChef/CyberChef_v11.5.0.html",
+      "launch": {
+        "kind": "html",
+        "target": "02-编码识别/CyberChef/CyberChef_v11.5.0.html"
+      },
+      "summary": "「网络瑞士军刀」：300+ 操作，离线单页，Magic 自动识别编码并链式解码。",
+      "when": "一堆乱码不知道是什么编码、需要多层解码、或做 Base/XX/摩斯/培根/凯撒等变换时，第一个打开它。",
+      "usage": [
+        {
+          "title": "图形方式",
+          "steps": [
+            "双击卡片「打开工具」→ 浏览器载入本地页面",
+            "左侧输入乱码 → 点「Magic」或从 Operations 搜操作名",
+            "右侧 Output 实时出结果；可用「Bake」逐步调试"
+          ]
+        },
+        {
+          "title": "常用操作名（搜索框直接输入）",
+          "code": "From Base64 / From Base32 / From Base58 / From Hex\nFrom Morse Code / ROT13 / Atbash Cipher / Bacon Cipher Decode\nMagic（自动识别） / From Charcode / URL Decode / From HTML Entity"
+        }
+      ],
+      "params": [
+        {
+          "flag": "Magic",
+          "desc": "自动推测编码并给出候选操作，最省事"
+        },
+        {
+          "flag": "Recipe",
+          "desc": "把多个操作串成流水线，一次跑完多层解码"
+        },
+        {
+          "flag": "Fork",
+          "desc": "对多行输入分别执行后续操作"
+        }
+      ],
+      "pitfalls": [
+        "离线版不会自动更新，需要新版本时重新下载替换",
+        "显示层压缩（.br/.gz）文件可忽略，浏览器会直接读未压缩版",
+        "极大数据（>1MiB）会转为文件下载形式展示"
+      ],
+      "next": [
+        "imgsize"
+      ]
+    },
+    {
+      "id": "imgsize",
+      "category": "stego",
+      "name": "imgsize 长宽校验",
+      "name_en": "imgsize.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "_脚本/imgsize.py",
+      "launch": {
+        "kind": "script",
+        "target": "_脚本/imgsize.bat"
+      },
+      "summary": "通过像素数据量与声明长宽对账，反推被篡改的真实宽高（PNG/BMP 严格，JPG 启发式）。",
+      "when": "图片显示异常、下半截是噪点、比例被拉伸，或怀疑 IHDR/SOF 被改过。",
+      "usage": [
+        {
+          "title": "拖拽（最省事）",
+          "steps": [
+            "把图片或文件夹拖到 _脚本/imgsize.bat 上松手"
+          ]
+        },
+        {
+          "title": "命令行",
+          "code": "C:\\Users\\1\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -X utf8 D:\\杂项工具\\_脚本\\imgsize.py 题目.png"
+        },
+        {
+          "title": "批量（递归）",
+          "code": "... imgsize.py D:\\题目\\ -r"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-r",
+          "desc": "递归子目录"
+        },
+        {
+          "flag": "多路径",
+          "desc": "可一次传多个文件"
+        }
+      ],
+      "pitfalls": [
+        "必须加 -X utf8，否则中文路径乱码",
+        "pngcheck 在 CRC 被重算后完全漏检，本脚本靠数据量对账仍能发现",
+        "JPG 没有像素长度字段，只能靠底部中性灰填充带启发式判断"
+      ],
+      "next": [
+        "pngcheck",
+        "stegsolve",
+        "exiftool"
+      ]
+    },
+    {
+      "id": "pngcheck",
+      "category": "stego",
+      "name": "pngcheck 套件",
+      "name_en": "pngcheck / pngsplit / png-fix-IDAT",
+      "version": "3.0.3",
+      "type": "cli",
+      "path": "pngcheck/pngcheck.exe",
+      "alt_paths": [
+        "pngcheck/pngsplit.exe",
+        "pngcheck/png-fix-IDAT-windowsize.exe"
+      ],
+      "launch": {
+        "kind": "dir",
+        "target": "pngcheck"
+      },
+      "summary": "PNG 结构校验、chunk 拆分、IDAT 窗口修复；能在任意文件里搜索并提取 PNG。",
+      "when": "PNG 打不开、CRC 报错、怀疑 tEXt 藏 flag、或要从 bin 里捞图片。",
+      "usage": [
+        {
+          "title": "基本校验",
+          "code": ".\\pngcheck\\pngcheck.exe 图片.png"
+        },
+        {
+          "title": "逐 chunk 结构",
+          "code": ".\\pngcheck\\pngcheck.exe -v 图片.png"
+        },
+        {
+          "title": "看 tEXt 文本块（藏 flag 必查）",
+          "code": ".\\pngcheck\\pngcheck.exe -t 图片.png"
+        },
+        {
+          "title": "乱码时转义高位字符",
+          "code": ".\\pngcheck\\pngcheck.exe -7 图片.png"
+        },
+        {
+          "title": "调色板/透明度",
+          "code": ".\\pngcheck\\pngcheck.exe -p 图片.png"
+        },
+        {
+          "title": "只报错",
+          "code": ".\\pngcheck\\pngcheck.exe -q 图片.png"
+        },
+        {
+          "title": "在任意文件里搜 PNG",
+          "code": ".\\pngcheck\\pngcheck.exe -s 文件.bin"
+        },
+        {
+          "title": "搜索并提取",
+          "code": ".\\pngcheck\\pngcheck.exe -x 文件.bin"
+        },
+        {
+          "title": "拆 chunk",
+          "code": ".\\pngcheck\\pngsplit.exe 图片.png"
+        },
+        {
+          "title": "修 IDAT 窗口",
+          "code": ".\\pngcheck\\png-fix-IDAT-windowsize.exe 图片.png"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-v / -vv",
+          "desc": "详细结构 / 解码并打印每行 filter"
+        },
+        {
+          "flag": "-t",
+          "desc": "打印 tEXt 文本块"
+        },
+        {
+          "flag": "-7",
+          "desc": "打印 tEXt 并转义高位字符"
+        },
+        {
+          "flag": "-p",
+          "desc": "打印 PLTE 调色板与 tRNS"
+        },
+        {
+          "flag": "-q",
+          "desc": "只输出错误"
+        },
+        {
+          "flag": "-s / -x",
+          "desc": "在任意文件中搜索 / 搜索并提取"
+        }
+      ],
+      "pitfalls": [
+        "只验 CRC：改完长宽并重算 CRC 就查不出来，高度改大时甚至报 No errors detected",
+        "怀疑尺寸时务必配合 imgsize.py",
+        "参数可组合：-q -7、-v -t"
+      ],
+      "next": [
+        "imgsize",
+        "stegsolve",
+        "binwalk"
+      ]
+    },
+    {
+      "id": "stegsolve",
+      "category": "stego",
+      "name": "StegSolve",
+      "name_en": "StegSolve",
+      "version": "1.4",
+      "type": "gui",
+      "path": "StegSolve/StegSolve-1.4.jar",
+      "launch": {
+        "kind": "bat",
+        "target": "StegSolve/启动StegSolve.bat",
+        "workdir": "StegSolve"
+      },
+      "summary": "图片逐通道、逐位平面查看，Frame Browser 翻帧，Stereogram Solver 解立体图。",
+      "when": "图片肉眼看不出问题，怀疑低位藏数据、多帧 GIF 藏图、或需要看某个颜色通道。",
+      "usage": [
+        {
+          "title": "图形方式",
+          "steps": [
+            "双击 StegSolve/启动StegSolve.bat",
+            "File → Open 选图片",
+            "底部箭头切换通道/位平面"
+          ]
+        },
+        {
+          "title": "Frame Browser",
+          "code": "Analyse → Frame Browser（GIF 多帧逐帧看）"
+        },
+        {
+          "title": "Stereogram Solver",
+          "code": "Analyse → Stereogram Solver（立体图/随机点图）"
+        }
+      ],
+      "params": [
+        {
+          "flag": "Red/Green/Blue plane",
+          "desc": "单通道查看"
+        },
+        {
+          "flag": "Bit planes 0-7",
+          "desc": "逐位平面，低位平面常藏 LSB 数据"
+        },
+        {
+          "flag": "Frame Browser",
+          "desc": "多帧图片逐帧浏览"
+        },
+        {
+          "flag": "Stereogram Solver",
+          "desc": "解立体图"
+        }
+      ],
+      "pitfalls": [
+        "需要 Java，双击无反应先查 java -version",
+        "大图逐位平面切换较慢，耐心等"
+      ],
+      "next": [
+        "pngcheck",
+        "imgsize"
+      ]
+    },
+    {
+      "id": "exiftool",
+      "category": "stego",
+      "name": "ExifTool",
+      "name_en": "ExifTool",
+      "version": "13.59",
+      "type": "cli",
+      "path": "CTF-tools/exiftool/exiftool.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "CTF-tools/exiftool"
+      },
+      "summary": "读/写图片、文档、音视频元数据：GPS、作者、注释、隐藏字段。",
+      "when": "拿到任何文件先看元数据，flag 常藏在 Comment/Artist/GPS 里。",
+      "usage": [
+        {
+          "title": "全部元数据",
+          "code": ".\\exiftool.exe 图片.png"
+        },
+        {
+          "title": "分组显示全部字段",
+          "code": ".\\exiftool.exe -a -G1 图片.png"
+        },
+        {
+          "title": "只取值（便于管道）",
+          "code": ".\\exiftool.exe -b -Comment 图片.png"
+        },
+        {
+          "title": "递归扫描目录",
+          "code": ".\\exiftool.exe -r D:\\题目\\"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-a",
+          "desc": "显示重复标签"
+        },
+        {
+          "flag": "-G1",
+          "desc": "按分组显示"
+        },
+        {
+          "flag": "-b",
+          "desc": "二进制/原始值输出"
+        },
+        {
+          "flag": "-r",
+          "desc": "递归目录"
+        }
+      ],
+      "pitfalls": [
+        "exiftool 只读文件头，报告的是被篡改后的值，不能判断真假"
+      ],
+      "next": [
+        "imgsize",
+        "binwalk"
+      ]
+    },
+    {
+      "id": "binwalk",
+      "category": "forensics",
+      "name": "binwalk",
+      "name_en": "binwalk",
+      "version": "2.3.4",
+      "type": "cli",
+      "path": "binwalk/binwalk.bat",
+      "launch": {
+        "kind": "bat",
+        "target": "binwalk/binwalk.bat",
+        "workdir": "binwalk"
+      },
+      "summary": "文件签名扫描、自动提取嵌套文件、熵分析找加密/压缩段。",
+      "when": "一个文件里疑似藏了多个文件，或拿到固件/镜像要先摸清结构。",
+      "usage": [
+        {
+          "title": "签名扫描",
+          "code": ".\\binwalk\\binwalk.bat 题目.bin"
+        },
+        {
+          "title": "自动提取",
+          "code": ".\\binwalk\\binwalk.bat -e 题目.bin"
+        },
+        {
+          "title": "熵分析",
+          "code": ".\\binwalk\\binwalk.bat -E 题目.bin"
+        },
+        {
+          "title": "找可执行代码段",
+          "code": ".\\binwalk\\binwalk.bat -A 题目.bin"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-e",
+          "desc": "自动提取（结果在 _题目.bin.extracted/）"
+        },
+        {
+          "flag": "-E",
+          "desc": "熵分析"
+        },
+        {
+          "flag": "-A",
+          "desc": "找 CPU 架构签名"
+        },
+        {
+          "flag": "-D",
+          "desc": "自定义签名类型"
+        }
+      ],
+      "pitfalls": [
+        "必须用 binwalk.bat（自带 UTF-8 环境，能处理中文路径）",
+        "装在独立虚拟环境 binwalk/Scripts/python.exe，不要 pip 装进系统 Python",
+        "-e 依赖外部工具（7z/dd），Windows 上部分规则失败，失败时用 foremost 兜底"
+      ],
+      "next": [
+        "foremost",
+        "7zip"
+      ]
+    },
+    {
+      "id": "foremost",
+      "category": "forensics",
+      "name": "foremost",
+      "name_en": "foremost",
+      "version": "1.5.7",
+      "type": "cli",
+      "path": "foremost/foremost.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "foremost"
+      },
+      "summary": "按文件头尾雕刻恢复，比 binwalk -e 更激进的 carve 工具。",
+      "when": "binwalk 提取失败、文件头被破坏、或要从镜像里批量捞图片/文档。",
+      "usage": [
+        {
+          "title": "只找 PNG",
+          "code": "cd D:\\杂项工具\\foremost\n.\\foremost.exe -t png -i 题目.bin -o 输出目录"
+        },
+        {
+          "title": "全类型",
+          "code": ".\\foremost.exe -t all -i 题目.bin -o 输出目录"
+        },
+        {
+          "title": "指定多类型",
+          "code": ".\\foremost.exe -t jpg,png,gif -i 题目.bin -o 输出目录"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-t",
+          "desc": "文件类型（all/jpg/png/gif/pdf/zip...）"
+        },
+        {
+          "flag": "-i",
+          "desc": "输入文件或设备"
+        },
+        {
+          "flag": "-o",
+          "desc": "输出目录（必须不存在或为空）"
+        },
+        {
+          "flag": "-T",
+          "desc": "带时间戳的子目录"
+        }
+      ],
+      "pitfalls": [
+        "必须在 foremost 自己目录下跑，要读同目录 foremost.conf",
+        "输出目录必须为空，否则报错",
+        "结果：输出目录/类型/ 下是文件本体，audit.txt 是偏移与大小报告"
+      ],
+      "next": [
+        "binwalk"
+      ]
+    },
+    {
+      "id": "volatility3",
+      "category": "forensics",
+      "name": "Volatility 3",
+      "name_en": "Volatility 3",
+      "version": "2.28.2",
+      "type": "cli",
+      "path": "06-取证/volatility3/venv/Scripts/vol.exe",
+      "launch": {
+        "kind": "bat",
+        "target": "06-取证/volatility3/启动Volatility.bat",
+        "workdir": "06-取证/volatility3"
+      },
+      "summary": "内存镜像取证事实标准：进程、网络连接、注册表、凭据、文件系统全可挖。",
+      "when": "拿到 .raw/.mem/.vmem 内存镜像，或需要从内存里找 flag、密码、进程。",
+      "usage": [
+        {
+          "title": "识别镜像信息（第一步永远先跑）",
+          "code": "vol -f memory.raw windows.info"
+        },
+        {
+          "title": "列进程",
+          "code": "vol -f memory.raw windows.pslist"
+        },
+        {
+          "title": "进程树",
+          "code": "vol -f memory.raw windows.pstree"
+        },
+        {
+          "title": "网络连接",
+          "code": "vol -f memory.raw windows.netscan"
+        },
+        {
+          "title": "命令行历史",
+          "code": "vol -f memory.raw windows.cmdline"
+        },
+        {
+          "title": "扫文件",
+          "code": "vol -f memory.raw windows.filescan"
+        },
+        {
+          "title": "导出文件",
+          "code": "vol -f memory.raw windows.dumpfiles --virtaddr 0x..."
+        },
+        {
+          "title": "注册表",
+          "code": "vol -f memory.raw windows.registry.hivelist"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-f",
+          "desc": "内存镜像文件"
+        },
+        {
+          "flag": "-o",
+          "desc": "输出目录"
+        },
+        {
+          "flag": "--cache-path",
+          "desc": "符号缓存目录（默认 APPDATA）"
+        },
+        {
+          "flag": "-u / --offline",
+          "desc": "允许/禁止联网下载符号表"
+        },
+        {
+          "flag": "--parallelism",
+          "desc": "并行模式 processes/threads/off"
+        }
+      ],
+      "pitfalls": [
+        "首次跑某系统版本会自动下载符号表，需要网络；离线环境要预置 symbols",
+        "APPDATA 不可写时用 --cache-path 指到可写目录（本机启动脚本已处理）",
+        "内存镜像动辄数 GB，插件跑得慢是正常的"
+      ],
+      "next": [
+        "binwalk"
+      ]
+    },
+    {
+      "id": "tshark",
+      "category": "traffic",
+      "name": "Wireshark / tshark",
+      "name_en": "Wireshark",
+      "version": "4.7.4",
+      "type": "gui-cli",
+      "path": "C:/Program Files/Wireshark/tshark.exe",
+      "alt_paths": [
+        "C:/Program Files/Wireshark/Wireshark.exe"
+      ],
+      "launch": {
+        "kind": "exe",
+        "target": "C:/Program Files/Wireshark/Wireshark.exe"
+      },
+      "summary": "流量分析标准工具：图形界面看包 + tshark 命令行批量处理。",
+      "when": "拿到 .pcap/.pcapng，要还原协议、提取文件、找 flag。",
+      "usage": [
+        {
+          "title": "概览（先看有什么协议）",
+          "code": "tshark -r 题目.pcap -q -z io,phs"
+        },
+        {
+          "title": "只列 HTTP 请求",
+          "code": "tshark -r 题目.pcap -Y http.request -T fields -e http.host -e http.request.uri"
+        },
+        {
+          "title": "导出 HTTP 对象",
+          "code": "tshark -r 题目.pcap --export-objects http,输出目录"
+        },
+        {
+          "title": "看 DNS 查询",
+          "code": "tshark -r 题目.pcap -Y dns -T fields -e dns.qry.name"
+        },
+        {
+          "title": "提取 TCP 流",
+          "code": "tshark -r 题目.pcap -q -z follow,tcp,ascii,0"
+        },
+        {
+          "title": "按流统计",
+          "code": "tshark -r 题目.pcap -q -z conv,tcp"
+        },
+        {
+          "title": "图形方式",
+          "code": "双击卡片「打开工具」→ Wireshark 图形界面 → 统计/追踪流"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-r",
+          "desc": "读取 pcap 文件"
+        },
+        {
+          "flag": "-Y",
+          "desc": "显示过滤器（Wireshark 语法）"
+        },
+        {
+          "flag": "-T fields -e",
+          "desc": "只输出指定字段，便于脚本处理"
+        },
+        {
+          "flag": "--export-objects",
+          "desc": "导出协议对象（http/smb/tftp 等）"
+        },
+        {
+          "flag": "-z",
+          "desc": "统计项（io,phs / conv,tcp / follow,tcp,ascii,N）"
+        },
+        {
+          "flag": "-q",
+          "desc": "安静模式，只输出统计"
+        }
+      ],
+      "pitfalls": [
+        "分析 pcap 文件不需要 Npcap；实时抓包才需要",
+        "Npcap 免费版不支持静默安装（/S 会弹提示），需手动点界面",
+        "tshark 在 PATH 里可能没有，用完整路径 C:\\Program Files\\Wireshark\\tshark.exe",
+        "大 pcap 先用 -q -z io,phs 摸底再细看，别一上来全量渲染"
+      ],
+      "next": [
+        "nmap"
+      ]
+    },
+    {
+      "id": "nmap",
+      "category": "traffic",
+      "name": "nmap",
+      "name_en": "Nmap",
+      "version": "7.992",
+      "type": "cli",
+      "path": "05-流量分析/nmap/nmap.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "05-流量分析/nmap"
+      },
+      "summary": "端口扫描、服务与版本识别、OS 指纹、NSE 脚本引擎。",
+      "when": "流量题要还原目标服务、或授权渗透测试的信息收集阶段。",
+      "usage": [
+        {
+          "title": "基础扫描",
+          "code": ".\\nmap.exe 192.168.1.1"
+        },
+        {
+          "title": "常见端口 + 版本",
+          "code": ".\\nmap.exe -sV -p 1-1000 192.168.1.1"
+        },
+        {
+          "title": "全端口快速",
+          "code": ".\\nmap.exe -p- --min-rate 1000 192.168.1.1"
+        },
+        {
+          "title": "NSE 脚本",
+          "code": ".\\nmap.exe -sV --script http-title,http-headers -p 80,443 目标"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-sV",
+          "desc": "服务版本识别"
+        },
+        {
+          "flag": "-p",
+          "desc": "端口范围（-p- 为全端口）"
+        },
+        {
+          "flag": "-O",
+          "desc": "OS 指纹（需管理员）"
+        },
+        {
+          "flag": "-sS",
+          "desc": "SYN 半开扫描（需 Npcap + 管理员）"
+        },
+        {
+          "flag": "--script",
+          "desc": "NSE 脚本"
+        }
+      ],
+      "pitfalls": [
+        "未装 Npcap 时会警告并回退 connect() 模式，普通扫描仍可用，但 SYN/OS 指纹受限",
+        "本机是便携解包版，不需要安装、不写注册表",
+        "仅用于自有资产或授权目标"
+      ],
+      "next": [
+        "tshark"
+      ]
+    },
+    {
+      "id": "theharvester",
+      "category": "osint",
+      "name": "theHarvester",
+      "name_en": "theHarvester",
+      "version": "4.11.1",
+      "type": "cli",
+      "path": "07-OSINT/theharvester/venv/Scripts/theHarvester.exe",
+      "launch": {
+        "kind": "bat",
+        "target": "07-OSINT/theharvester/启动theHarvester.bat",
+        "workdir": "07-OSINT/theharvester"
+      },
+      "summary": "从公开来源收集域名相关的邮箱、子域、主机、员工名。",
+      "when": "OSINT 题要给目标域名做信息面梳理，或授权测试的侦察阶段。",
+      "usage": [
+        {
+          "title": "基础收集",
+          "code": "theHarvester -d example.com -b duckduckgo,crtsh"
+        },
+        {
+          "title": "子域为主",
+          "code": "theHarvester -d example.com -b crtsh,anubis -l 200"
+        },
+        {
+          "title": "输出文件",
+          "code": "theHarvester -d example.com -b duckduckgo -f 结果"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-d",
+          "desc": "目标域名"
+        },
+        {
+          "flag": "-b",
+          "desc": "数据源（duckduckgo/crtsh/anubis/otx/urlscan...）"
+        },
+        {
+          "flag": "-l",
+          "desc": "结果数量上限"
+        },
+        {
+          "flag": "-f",
+          "desc": "输出文件名（生成 .html/.json/.xml）"
+        }
+      ],
+      "pitfalls": [
+        "首次运行会在 ~/.theHarvester 与 ~/.local/share/theHarvester 建配置与数据库，目录权限不足会报错（工具箱已预置）",
+        "很多数据源需要 API key，在 ~/.theHarvester/api-keys.yaml 里填",
+        "部分源依赖 playwright 浏览器内核，首次用需 playwright install",
+        "仅用于公开信息收集与授权场景"
+      ],
+      "next": []
+    }
+  ]
+}

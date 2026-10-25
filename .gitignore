@@ -1,0 +1,104 @@
+# ============================================================================
+#  MiscBox .gitignore
+#
+#  Strategy: this repo publishes framework + docs + scripts ONLY.
+#  Every tool payload is downloaded at install time by scripts/bootstrap.ps1.
+#
+#  A previous version listed whole category folders (e.g. "01-环境配置/")
+#  as ignored, which silently dropped the generated README inside them: a
+#  "!01-环境配置/README.md" re-include cannot resurrect a file whose parent
+#  directory is excluded. Verified with "git check-ignore -v".
+#  Rule of thumb here: never ignore a directory that contains a doc; ignore
+#  the specific payload subfolders instead.
+# ============================================================================
+
+# ---- downloaded tool payloads (binaries, archives, venvs) ----
+/_下载包/
+/downloads/
+/hashcat/
+/john/
+/perl/
+/pngcheck/
+/foremost/
+/StegSolve/
+/ARCHPR/
+/binwalk/
+/nmap/
+/CTF-tools/
+/05-流量分析/nmap/
+/06-取证/volatility3/
+/07-OSINT/theharvester/
+/02-编码识别/CyberChef/
+/03-隐写/StegSolve/
+/03-隐写/imgsize/
+/04-压缩包与文件修复/ARCHPR/
+/04-压缩包与文件修复/binwalk/
+/04-压缩包与文件修复/perl/
+/01-环境配置/jdk/
+/01-环境配置/python/
+
+# ---- runtime artifacts ----
+/_box/cache/
+/_box/work/
+/_box/env-report.json
+/_box/app/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.part
+*.tmp
+
+# ---- tool state files that must never be published ----
+*.potfile
+*.restore
+hashcat.log
+john.pot
+audit.txt
+*.extracted/
+
+# ---- secrets / local config ----
+api-keys.yaml
+proxies.yaml
+*.secret
+.env
+*.pem
+*.key
+
+# ---- OS / editor noise ----
+Thumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# ---- theHarvester scan output (may contain personal data) ----
+/07-OSINT/**/output/
+/07-OSINT/**/*.html
+/07-OSINT/**/*.xml
+
+# ---- large-file safety net (defence in depth) ----
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.exe
+*.msi
+*.dll
+*.bin
+*.raw
+*.mem
+*.vmem
+*.pcap
+*.pcapng
+
+# ---- ...but these are documentation/data the repo cannot work without ----
+!README.md
+!*/README.md
+!scripts/tools-manifest.json
+!_box/tools.json
