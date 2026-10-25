@@ -137,7 +137,7 @@ cd D:\杂项工具\foremost
 **命令行**
 
 ```
-C:\Users\1\AppData\Local\Python\pythoncore-3.14-64\python.exe -X utf8 D:\杂项工具\_脚本\imgsize.py 题目.png
+python -X utf8 D:\杂项工具\_脚本\imgsize.py 题目.png
 ```
 
 **批量（递归）**

@@ -301,7 +301,7 @@ C:\Users\<你>\AppData\Local\Python\pythoncore-3.14-64\python.exe -m pip install
   -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Volatility 3
-D:\websec\python\python.exe -m venv D:\杂项工具\06-取证\volatility3\venv
+C:\Python312\python.exe -m venv D:\杂项工具\06-取证\volatility3\venv
 D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -m pip install volatility3 ^
   -i https://pypi.tuna.tsinghua.edu.cn/simple
 
@@ -387,13 +387,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "D:\杂项工具\_box\setup.
 **3.14（主运行时，含 Pillow）**
 
 ```
-C:\Users\1\AppData\Local\Python\pythoncore-3.14-64\python.exe -X utf8 脚本.py
+python -X utf8 脚本.py
 ```
 
-**3.12（D:\websec\python，供 binwalk/volatility3/theHarvester 虚拟环境）**
+**3.12（供 binwalk/volatility3/theHarvester 虚拟环境）**
 
 ```
-D:\websec\python\python.exe -V
+python -V
 ```
 
 ### 踩坑提醒
