@@ -85,21 +85,28 @@ if (Test-PathSafe $py314) {
         'https://www.python.org/downloads/'
 }
 
-# Python 3.12 (venv base for binwalk / volatility / theHarvester)
-$py312 = $null
+# Python for virtualenvs (binwalk / volatility / theHarvester)
+# Prefer a real 3.12/3.13 if present, but accept whatever secondary Python
+# exists: those three tools only need "some Python that can build a venv".
+# Report the version that was actually found - labelling a 3.14 as "3.12" just
+# because 3.12 was the first candidate would be a lie in the report.
+$pyVenv = $null
 foreach ($c in @(                 (Join-Path $env:LOCALAPPDATA 'Python\pythoncore-3.12-64\python.exe'),
+                 (Join-Path $env:LOCALAPPDATA 'Python\pythoncore-3.13-64\python.exe'),
                  (Join-Path $env:LOCALAPPDATA 'Python\pythoncore-3.14-64\python.exe'))) {
-    if (Test-PathSafe $c) { $py312 = $c; break }
+    if (Test-PathSafe $c) { $pyVenv = $c; break }
 }
-if (-not $py312) {
+if (-not $pyVenv) {
     $cmd = Get-Command 'python' -ErrorAction SilentlyContinue
-    if ($cmd) { $py312 = $cmd.Source }
+    if ($cmd) { $pyVenv = $cmd.Source }
 }
-if (Test-PathSafe $py312) {
-    $v = (& $py312 -V 2>&1) -join ' '
-    Add-Check 'python312' 'Python 3.12 (venv base)' 'runtime' 'ok' "$v  $py312"
+if (Test-PathSafe $pyVenv) {
+    $v = (& $pyVenv -V 2>&1) -join ' '
+    $m = [regex]::Match($v, '(\d+\.\d+)')
+    $label = if ($m.Success) { "Python $($m.Groups[1].Value) (venv base)" } else { 'Python (venv base)' }
+    Add-Check 'python-venv-base' $label 'runtime' 'ok' "$v  $pyVenv"
 } else {
-    Add-Check 'python312' 'Python 3.12 (venv base)' 'runtime' 'warn' 'no secondary Python found' `
+    Add-Check 'python-venv-base' 'Python (venv base)' 'runtime' 'warn' 'no secondary Python found' `
         'Needed as the venv base for binwalk / volatility3 / theHarvester.'
 }
 
