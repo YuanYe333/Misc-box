@@ -714,6 +714,59 @@ curl.exe -sSI https://example.com
 }
 
 
+def _run_section(t: core.Tool) -> list[str]:
+    """生成「界面里怎么跑」一节：列出拖放要求与全部预设。
+
+    这一节直接从 tools.json 的 run 块读，所以改了配置重跑 gen_docs.py 就同步。
+    """
+    raw = t.run_raw
+    if not raw or not raw.get("kind"):
+        return []
+
+    lines = ["### 界面里怎么跑", ""]
+    intro = raw.get("intro")
+    if intro:
+        lines.append(intro)
+        lines.append("")
+
+    input_mode = raw.get("input", "files")
+    accept = raw.get("accept") or []
+    multi = bool(raw.get("multi"))
+
+    if input_mode == "none":
+        lines.append("选中这个工具后点「▶ 运行」即可，不需要文件。")
+    elif input_mode == "text":
+        lines.append("选中后在「输入内容」框里填数据，点「▶ 运行」。")
+    else:
+        how = "把文件拖进窗口" if not multi else "把文件（可多个）拖进窗口"
+        lines.append(f"{how}，或点拖放区选文件，然后点「▶ 运行」。")
+        if accept:
+            lines.append("")
+            lines.append("接受：" + "  ".join(f"`{a}`" for a in accept))
+    lines.append("")
+
+    presets = raw.get("presets") or []
+    if presets:
+        lines.append("「运行方式」下拉里的预设：")
+        lines.append("")
+        lines.append("| 运行方式 | 说明 |")
+        lines.append("| --- | --- |")
+        for p in presets:
+            title = str(p.get("title", "默认")).replace("|", "\\|")
+            argv = p.get("argv") or []
+            note = " ".join(str(a) for a in argv).replace("|", "\\|")
+            if p.get("no_file"):
+                note = (note + "（不需要文件）").strip()
+            lines.append(f"| {title} | `{note}` |")
+        lines.append("")
+
+    lines.append("> 输出会实时刷在下方面板，跑出来的文件在 "
+                 "`_box\\work\\runs\\<时间戳>_<工具id>\\`，"
+                 "点「📂 输出目录」直接打开。")
+    lines.append("")
+    return lines
+
+
 def build_doc(cat: dict, tools: list[core.Tool]) -> str:
     header = CAT_HEADER.get(cat["id"], "")
     lines = [header.rstrip(), ""]
@@ -725,6 +778,13 @@ def build_doc(cat: dict, tools: list[core.Tool]) -> str:
     for t in tools:
         lines.append(f"| [{t.name}](#{t.id}) | {t.version} | {t.summary} |")
     lines.append("")
+
+    runnable = [t for t in tools if t.runnable]
+    if runnable:
+        lines.append(f"> 本分类有 {len(runnable)} 个工具可以直接在图形界面里跑："
+                     "选中卡片 → 把文件拖进窗口 → 点「▶ 运行」→ 看输出。"
+                     "每个工具的「界面里怎么跑」一节列出了它的全部预设。")
+        lines.append("")
 
     lines.append("---")
     lines.append("")
@@ -773,6 +833,10 @@ def build_doc(cat: dict, tools: list[core.Tool]) -> str:
                 desc = str(p.get("desc", "")).replace("|", "\\|")
                 lines.append(f"| `{flag}` | {desc} |")
             lines.append("")
+
+        run_block = _run_section(t)
+        if run_block:
+            lines.extend(run_block)
 
         if t.pitfalls:
             lines.append("### 踩坑提醒")

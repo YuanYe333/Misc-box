@@ -229,7 +229,27 @@
         "setup",
         "python-runtime",
         "java-runtime"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "none",
+        "accept": [],
+        "multi": false,
+        "argv": [],
+        "intro": "体检运行时依赖，给出补齐建议。",
+        "presets": [
+          {
+            "title": "体检并给结论",
+            "argv": []
+          },
+          {
+            "title": "输出 JSON",
+            "argv": [
+              "--json"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "bases",
@@ -310,7 +330,76 @@
         "encscan",
         "filetype",
         "xor"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".txt",
+          ".bin",
+          ".dat",
+          ".b64",
+          ".hex"
+        ],
+        "multi": false,
+        "argv": [
+          "-f",
+          "{file}"
+        ],
+        "intro": "Base 家族全家桶。不确定用哪种就先跑「自动探测」。",
+        "presets": [
+          {
+            "title": "自动探测（推荐）",
+            "argv": [
+              "-f",
+              "{file}"
+            ]
+          },
+          {
+            "title": "Base64 解码",
+            "argv": [
+              "-d",
+              "b64",
+              "-f",
+              "{file}"
+            ]
+          },
+          {
+            "title": "Base32 解码",
+            "argv": [
+              "-d",
+              "b32",
+              "-f",
+              "{file}"
+            ]
+          },
+          {
+            "title": "Base58 解码",
+            "argv": [
+              "-d",
+              "b58",
+              "-f",
+              "{file}"
+            ]
+          },
+          {
+            "title": "Base85 解码",
+            "argv": [
+              "-d",
+              "b85",
+              "-f",
+              "{file}"
+            ]
+          },
+          {
+            "title": "列出全部字母表",
+            "argv": [
+              "--list"
+            ],
+            "no_file": true
+          }
+        ]
+      }
     },
     {
       "id": "cyberchef",
@@ -414,7 +503,24 @@
         "cyberchef",
         "bases",
         "xor"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".txt",
+          ".bin",
+          ".dat",
+          ".b64",
+          ".hex"
+        ],
+        "multi": false,
+        "argv": [
+          "-f",
+          "{file}"
+        ],
+        "intro": "自动识别编码并尝试多层解码。文本文件拖进来即可。"
+      }
     },
     {
       "id": "hashcrack",
@@ -505,7 +611,48 @@
         "encscan",
         "strings",
         "john"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "text",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "--identify",
+          "{text}"
+        ],
+        "intro": "粘贴哈希值即可。先识别类型，再按类型爆破。",
+        "presets": [
+          {
+            "title": "识别哈希类型",
+            "argv": [
+              "--identify",
+              "{text}"
+            ]
+          },
+          {
+            "title": "内置弱口令爆破",
+            "argv": [
+              "{text}",
+              "--builtin"
+            ]
+          },
+          {
+            "title": "掩码穷举（掩码填 ?d?d?d?d）",
+            "argv": [
+              "{text}",
+              "--mask",
+              "{mask}"
+            ]
+          },
+          {
+            "title": "列出支持的算法",
+            "argv": [
+              "--list-algos"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "qrcode",
@@ -581,7 +728,49 @@
         "imgsize",
         "stegodetect",
         "bases"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".png",
+          ".bmp"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "二维码/条码解码，纯标准库，不需要 zbar。",
+        "presets": [
+          {
+            "title": "解码",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "解码并打印模块矩阵",
+            "argv": [
+              "{file}",
+              "--dump"
+            ]
+          },
+          {
+            "title": "反色后解码（黑底白码）",
+            "argv": [
+              "{file}",
+              "--invert"
+            ]
+          },
+          {
+            "title": "解码失败时看码字",
+            "argv": [
+              "{file}",
+              "--hex"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "xor",
@@ -664,7 +853,68 @@
         "encscan",
         "bases",
         "filetype"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".bin",
+          ".dat",
+          ".txt",
+          ".enc"
+        ],
+        "multi": false,
+        "argv": [
+          "-f",
+          "{file}"
+        ],
+        "intro": "XOR 爆破。需要密钥/明文/长度的预设，请在下框填对应内容。",
+        "presets": [
+          {
+            "title": "爆破（推荐）",
+            "argv": [
+              "-f",
+              "{file}"
+            ]
+          },
+          {
+            "title": "只看前 20 个候选",
+            "argv": [
+              "-f",
+              "{file}",
+              "--top",
+              "20"
+            ]
+          },
+          {
+            "title": "按已知密钥解密（填密钥到文本框）",
+            "argv": [
+              "-f",
+              "{file}",
+              "--key",
+              "{text}"
+            ]
+          },
+          {
+            "title": "已知明文攻击（填已知明文）",
+            "argv": [
+              "-f",
+              "{file}",
+              "--known-plaintext",
+              "{text}"
+            ]
+          },
+          {
+            "title": "指定密钥长度（填数字）",
+            "argv": [
+              "-f",
+              "{file}",
+              "--keylen",
+              "{text}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "audiospec",
@@ -753,7 +1003,63 @@
       "next": [
         "wireshark",
         "7zip"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".wav"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}",
+          "--spec",
+          "-o",
+          "{outdir}/频谱.png"
+        ],
+        "intro": "频谱藏字题。默认出频谱图，产物在下方列表里。",
+        "presets": [
+          {
+            "title": "出频谱图（推荐）",
+            "argv": [
+              "{file}",
+              "--spec",
+              "-o",
+              "{outdir}/频谱.png"
+            ]
+          },
+          {
+            "title": "出波形图",
+            "argv": [
+              "{file}",
+              "--wave",
+              "-o",
+              "{outdir}/波形.png"
+            ]
+          },
+          {
+            "title": "两张都出",
+            "argv": [
+              "{file}",
+              "-o",
+              "{outdir}/音频"
+            ]
+          },
+          {
+            "title": "高分辨率频谱",
+            "argv": [
+              "{file}",
+              "--spec",
+              "--width",
+              "1400",
+              "--height",
+              "700",
+              "-o",
+              "{outdir}/频谱_大.png"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "exiftool",
@@ -811,7 +1117,52 @@
       "next": [
         "imgsize",
         "binwalk"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [],
+        "multi": true,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "读元数据：GPS、作者、注释、隐藏字段。",
+        "presets": [
+          {
+            "title": "读全部元数据",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "只看 GPS",
+            "argv": [
+              "-GPS:all",
+              "-a",
+              "-g",
+              "{file}"
+            ]
+          },
+          {
+            "title": "含未知/隐藏字段",
+            "argv": [
+              "-a",
+              "-u",
+              "-g",
+              "{file}"
+            ]
+          },
+          {
+            "title": "导出 JSON",
+            "argv": [
+              "-j",
+              "-a",
+              "-g",
+              "{file}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "imgsize",
@@ -862,7 +1213,23 @@
         "pngcheck",
         "stegsolve",
         "exiftool"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".png",
+          ".bmp",
+          ".gif",
+          ".jpg",
+          ".jpeg"
+        ],
+        "multi": true,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "反推被篡改的真实宽高。pngcheck 漏检的情况它能抓到。"
+      }
     },
     {
       "id": "lsb",
@@ -950,7 +1317,68 @@
         "stegsolve",
         "pngcheck",
         "imgsize"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".png",
+          ".bmp"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "LSB 提取。不知道参数时先跑「自动穷举」。",
+        "presets": [
+          {
+            "title": "自动穷举通道/位平面/位序",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "只看 RGB 最低位",
+            "argv": [
+              "{file}",
+              "--channel",
+              "all",
+              "--bit",
+              "0"
+            ]
+          },
+          {
+            "title": "看 Alpha 通道最低位",
+            "argv": [
+              "{file}",
+              "--channel",
+              "A",
+              "--bit",
+              "0"
+            ]
+          },
+          {
+            "title": "出第 3 位平面图",
+            "argv": [
+              "{file}",
+              "--plane",
+              "3",
+              "-o",
+              "{outdir}/plane3.png"
+            ]
+          },
+          {
+            "title": "出第 0 位平面图",
+            "argv": [
+              "{file}",
+              "--plane",
+              "0",
+              "-o",
+              "{outdir}/plane0.png"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "pngcheck",
@@ -1047,7 +1475,56 @@
         "imgsize",
         "stegsolve",
         "binwalk"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [
+          ".png"
+        ],
+        "multi": true,
+        "argv": [
+          "-v",
+          "{file}"
+        ],
+        "intro": "PNG 结构校验。多文件可一起拖。",
+        "presets": [
+          {
+            "title": "校验（-v，看 chunk 明细）",
+            "argv": [
+              "-v",
+              "{file}"
+            ]
+          },
+          {
+            "title": "简洁校验（只报 OK/错误）",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "打印 tEXt 文本块",
+            "argv": [
+              "-t",
+              "{file}"
+            ]
+          },
+          {
+            "title": "只报错误",
+            "argv": [
+              "-q",
+              "{file}"
+            ]
+          },
+          {
+            "title": "在文件里搜内嵌 PNG",
+            "argv": [
+              "-s",
+              "{file}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "stegodetect",
@@ -1125,7 +1602,40 @@
         "stegsolve",
         "binwalk",
         "foremost"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": true,
+        "argv": [
+          "{files}"
+        ],
+        "intro": "隐写总检：文件尾附加数据、多图对比、异常块。可一次拖多张图。",
+        "presets": [
+          {
+            "title": "总检（可多选文件）",
+            "argv": [
+              "{files}"
+            ]
+          },
+          {
+            "title": "总检 + 导出尾部数据",
+            "argv": [
+              "{files}",
+              "--tail-dump"
+            ]
+          },
+          {
+            "title": "两张图对比",
+            "argv": [
+              "--diff",
+              "{file}",
+              "{text}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "stegsolve",
@@ -1263,7 +1773,35 @@
         "7zip",
         "binwalk",
         "archpr"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".zip"
+        ],
+        "multi": true,
+        "argv": [
+          "{files}"
+        ],
+        "intro": "ZIP 伪加密 / 注释藏数据 / CRC 痕迹检测。",
+        "presets": [
+          {
+            "title": "检测",
+            "argv": [
+              "{files}"
+            ]
+          },
+          {
+            "title": "导出 ZIP 注释",
+            "argv": [
+              "{files}",
+              "--dump-comment",
+              "{outdir}/注释.bin"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "7zip",
@@ -1347,7 +1885,61 @@
         "archpr",
         "john",
         "hashcat"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "l",
+          "{file}"
+        ],
+        "intro": "压缩包列表 / 测试 / 解压。",
+        "presets": [
+          {
+            "title": "列出内容",
+            "argv": [
+              "l",
+              "{file}"
+            ]
+          },
+          {
+            "title": "显示技术信息（-slt）",
+            "argv": [
+              "l",
+              "-slt",
+              "{file}"
+            ]
+          },
+          {
+            "title": "测试完整性",
+            "argv": [
+              "t",
+              "{file}"
+            ]
+          },
+          {
+            "title": "解压到运行目录",
+            "argv": [
+              "x",
+              "{file}",
+              "-o{outdir}",
+              "-y"
+            ]
+          },
+          {
+            "title": "按原结构解压（含子目录）",
+            "argv": [
+              "x",
+              "{file}",
+              "-o{outdir}",
+              "-y",
+              "-r"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "archpr",
@@ -1454,7 +2046,44 @@
         "pngcheck",
         "filecarve",
         "cyberchef"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".png"
+        ],
+        "multi": false,
+        "argv": [
+          "--fix-png",
+          "{file}",
+          "-o",
+          "{outdir}/{stem}_crc.png"
+        ],
+        "intro": "CRC32 反推缺失字节。修 PNG 直接拖图；纯爆破请用文本框给参数。",
+        "presets": [
+          {
+            "title": "修 PNG 的 CRC（拖图即可）",
+            "argv": [
+              "--fix-png",
+              "{file}",
+              "-o",
+              "{outdir}/{stem}_crc.png"
+            ]
+          },
+          {
+            "title": "爆破：前缀 + 目标CRC + 长度",
+            "argv": [
+              "--prefix",
+              "{text}",
+              "--crc",
+              "{crc}",
+              "--len",
+              "{len}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "fakeenc",
@@ -1499,7 +2128,36 @@
         "archpr",
         "john",
         "hashcat"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".zip",
+          ".rar"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "伪加密判定。确认是伪加密后再另存修好的副本。",
+        "presets": [
+          {
+            "title": "只判定",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "判定并另存（清除伪加密）",
+            "argv": [
+              "{file}",
+              "-o",
+              "{outdir}/{stem}_fixed{ext}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "filecarve",
@@ -1552,7 +2210,36 @@
         "binwalk",
         "foremost",
         "7zip"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{file}",
+          "-o",
+          "{outdir}/carved"
+        ],
+        "intro": "按魔数从裸数据里雕出文件，binwalk 的轻量替代。",
+        "presets": [
+          {
+            "title": "雕刻到输出目录",
+            "argv": [
+              "{file}",
+              "-o",
+              "{outdir}/carved"
+            ]
+          },
+          {
+            "title": "只看尾部附加数据",
+            "argv": [
+              "{file}",
+              "--tail"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "filetype",
@@ -1597,7 +2284,17 @@
         "filecarve",
         "cyberchef",
         "binwalk"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": true,
+        "argv": [
+          "{files}"
+        ],
+        "intro": "魔数识别 + 扩展名与真实内容是否一致。"
+      }
     },
     {
       "id": "hashcat",
@@ -1691,7 +2388,46 @@
       "next": [
         "john",
         "hashcat-panel"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "--identify",
+          "{file}"
+        ],
+        "intro": "GPU 爆破。先看设备与识别类型，再选 hash mode。",
+        "cwd": "tool",
+        "presets": [
+          {
+            "title": "列出 GPU/OpenCL 设备",
+            "argv": [
+              "-I"
+            ],
+            "no_file": true
+          },
+          {
+            "title": "识别哈希类型",
+            "argv": [
+              "--identify",
+              "{file}"
+            ]
+          },
+          {
+            "title": "字典爆破（ZIP mode 17200）",
+            "argv": [
+              "-m",
+              "17200",
+              "-a",
+              "0",
+              "{file}",
+              "example.dict"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "hashcat-panel",
@@ -1788,7 +2524,80 @@
       "next": [
         "hashcat",
         "perl"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [
+          ".zip",
+          ".rar",
+          ".pdf",
+          ".7z",
+          ".docx",
+          ".xlsx",
+          ".txt"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "先从文件提取哈希（2john），再跑 john 破解。",
+        "cwd": "tool",
+        "presets": [
+          {
+            "title": "ZIP → 提取哈希",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/zip2john.exe",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "RAR → 提取哈希",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/rar2john.exe",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "Office 文档 → 提取哈希",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/office2john.py",
+            "kind": "python",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "PDF → 提取哈希（走 perl）",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/pdf2john.pl",
+            "kind": "perl",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "7z → 提取哈希（走 perl）",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/7z2john.pl",
+            "kind": "perl",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "破解已提取的哈希文件（拖 hash.txt）",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/john.exe",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "列出支持的格式",
+            "entry": "john/john-1.9.0-jumbo-1-win64/run/john.exe",
+            "argv": [
+              "--list=formats"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "perl",
@@ -1877,7 +2686,44 @@
         "fakeenc",
         "7zip",
         "filetype"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".zip"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "ZIP 结构体检：中央目录错位、CRC 损坏。",
+        "presets": [
+          {
+            "title": "只体检",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "修复并另存",
+            "argv": [
+              "{file}",
+              "-o",
+              "{outdir}/{stem}_fixed.zip"
+            ]
+          },
+          {
+            "title": "重建中央目录",
+            "argv": [
+              "{file}",
+              "--rebuild",
+              "-o",
+              "{outdir}/{stem}_rebuild.zip"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "dnsdump",
@@ -1949,7 +2795,53 @@
         "wireshark",
         "tshark",
         "cyberchef"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".pcap",
+          ".pcapng",
+          ".cap"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "DNS 批量导出 + 隧道特征识别。",
+        "presets": [
+          {
+            "title": "总览",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "只看 DNS 隧道特征",
+            "argv": [
+              "{file}",
+              "--tunnel"
+            ]
+          },
+          {
+            "title": "尝试解码隧道数据",
+            "argv": [
+              "{file}",
+              "--tunnel",
+              "--decode"
+            ]
+          },
+          {
+            "title": "导出 CSV",
+            "argv": [
+              "{file}",
+              "--csv",
+              "-o",
+              "{outdir}/dns.csv"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "nmap",
@@ -2012,7 +2904,41 @@
       ],
       "next": [
         "tshark"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "text",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "-sV",
+          "{text}"
+        ],
+        "intro": "端口扫描。只对自己有权限的目标用。",
+        "presets": [
+          {
+            "title": "服务识别（-sV）",
+            "argv": [
+              "-sV",
+              "{text}"
+            ]
+          },
+          {
+            "title": "快速扫描（-F）",
+            "argv": [
+              "-F",
+              "{text}"
+            ]
+          },
+          {
+            "title": "全端口（-p-）",
+            "argv": [
+              "-p-",
+              "{text}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "pcapcarve",
@@ -2074,7 +3000,46 @@
         "wireshark",
         "tshark",
         "binwalk"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".pcap",
+          ".pcapng",
+          ".cap"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "从 pcap 提取 HTTP/FTP/Telnet 明文内容。",
+        "presets": [
+          {
+            "title": "列出可提取的流",
+            "argv": [
+              "{file}",
+              "--list"
+            ]
+          },
+          {
+            "title": "提取全部明文到目录",
+            "argv": [
+              "{file}",
+              "-o",
+              "{outdir}/carved"
+            ]
+          },
+          {
+            "title": "跟随某条流（填流号到文本框）",
+            "argv": [
+              "{file}",
+              "--follow",
+              "{text}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "tcpextract",
@@ -2136,7 +3101,39 @@
         "wireshark",
         "tshark",
         "filetype"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".pcap",
+          ".pcapng",
+          ".cap"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "按流重组 TCP 会话并导出。",
+        "presets": [
+          {
+            "title": "列出所有 TCP 流",
+            "argv": [
+              "{file}",
+              "--list"
+            ]
+          },
+          {
+            "title": "导出全部流到目录",
+            "argv": [
+              "{file}",
+              "--all",
+              "-o",
+              "{outdir}/streams"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "tshark",
@@ -2219,7 +3216,68 @@
       ],
       "next": [
         "nmap"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [
+          ".pcap",
+          ".pcapng",
+          ".cap"
+        ],
+        "multi": false,
+        "argv": [
+          "-r",
+          "{file}"
+        ],
+        "intro": "命令行批量处理、导出对象、追踪流。",
+        "presets": [
+          {
+            "title": "协议层次统计",
+            "argv": [
+              "-r",
+              "{file}",
+              "-q",
+              "-z",
+              "io,phs"
+            ]
+          },
+          {
+            "title": "导出 HTTP 对象",
+            "argv": [
+              "-r",
+              "{file}",
+              "--export-objects",
+              "http,{outdir}/http"
+            ]
+          },
+          {
+            "title": "只看 HTTP 请求",
+            "argv": [
+              "-r",
+              "{file}",
+              "-Y",
+              "http.request",
+              "-T",
+              "fields",
+              "-e",
+              "http.host",
+              "-e",
+              "http.request.uri"
+            ]
+          },
+          {
+            "title": "TCP 对话统计",
+            "argv": [
+              "-r",
+              "{file}",
+              "-q",
+              "-z",
+              "conv,tcp"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "usbhid",
@@ -2285,7 +3343,51 @@
         "wireshark",
         "tshark",
         "cyberchef"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".pcap",
+          ".pcapng",
+          ".cap"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "USB HID 键盘/鼠标流量还原，CTF 高频。",
+        "presets": [
+          {
+            "title": "列出 USB 设备",
+            "argv": [
+              "{file}",
+              "--list"
+            ]
+          },
+          {
+            "title": "键盘流量还原",
+            "argv": [
+              "{file}",
+              "--keyboard"
+            ]
+          },
+          {
+            "title": "键盘 + 鼠标",
+            "argv": [
+              "{file}",
+              "--all"
+            ]
+          },
+          {
+            "title": "看原始 HID 数据",
+            "argv": [
+              "{file}",
+              "--raw"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "binwalk",
@@ -2346,7 +3448,40 @@
       "next": [
         "foremost",
         "7zip"
-      ]
+      ],
+      "run": {
+        "kind": "bat",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "文件签名扫描、自动提取、熵分析。",
+        "cwd": "tool",
+        "presets": [
+          {
+            "title": "扫描签名",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "熵分析",
+            "argv": [
+              "-E",
+              "{file}"
+            ]
+          },
+          {
+            "title": "扫描并自动提取",
+            "argv": [
+              "-e",
+              "{file}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "deleted",
@@ -2399,7 +3534,43 @@
         "volatility3",
         "foremost",
         "exiftool"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "--mft",
+          "{file}"
+        ],
+        "intro": "NTFS 已删除文件枚举。直接读盘需要管理员权限，拖 MFT 镜像则不用。",
+        "presets": [
+          {
+            "title": "从 MFT 镜像枚举（拖文件）",
+            "argv": [
+              "--mft",
+              "{file}"
+            ]
+          },
+          {
+            "title": "从 MFT 镜像导出 CSV",
+            "argv": [
+              "--mft",
+              "{file}",
+              "--csv",
+              "{outdir}/deleted.csv"
+            ]
+          },
+          {
+            "title": "读某个盘的 MFT（填盘符，需管理员）",
+            "argv": [
+              "--drive",
+              "{text}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "foremost",
@@ -2454,7 +3625,54 @@
       ],
       "next": [
         "binwalk"
-      ]
+      ],
+      "run": {
+        "kind": "exe",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "-i",
+          "{file}",
+          "-o",
+          "{outdir}/foremost"
+        ],
+        "intro": "按文件头尾雕刻恢复。binwalk 失败时兜底，产物在输出目录的 zip/png 等子目录里。",
+        "cwd": "tool",
+        "presets": [
+          {
+            "title": "雕刻全部类型",
+            "argv": [
+              "-i",
+              "{file}",
+              "-o",
+              "{outdir}/foremost"
+            ]
+          },
+          {
+            "title": "只雕图片",
+            "argv": [
+              "-i",
+              "{file}",
+              "-o",
+              "{outdir}/foremost",
+              "-t",
+              "png,jpg,gif"
+            ]
+          },
+          {
+            "title": "只雕压缩包",
+            "argv": [
+              "-i",
+              "{file}",
+              "-o",
+              "{outdir}/foremost",
+              "-t",
+              "zip,rar,pdf"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "hexview",
@@ -2510,7 +3728,53 @@
         "exiftool",
         "strings",
         "cyberchef"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{file}",
+          "-n",
+          "512"
+        ],
+        "intro": "十六进制查看。要搜东西就在下框填十六进制串或文本。",
+        "presets": [
+          {
+            "title": "看开头 512 字节",
+            "argv": [
+              "{file}",
+              "-n",
+              "512"
+            ]
+          },
+          {
+            "title": "看全部",
+            "argv": [
+              "{file}",
+              "-n",
+              "1048576"
+            ]
+          },
+          {
+            "title": "搜十六进制串",
+            "argv": [
+              "{file}",
+              "-s",
+              "{text}"
+            ]
+          },
+          {
+            "title": "搜文本",
+            "argv": [
+              "{file}",
+              "-t",
+              "{text}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "metawipe",
@@ -2559,7 +3823,43 @@
         "exiftool",
         "imgsize",
         "stegsolve"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".tif",
+          ".tiff",
+          ".pdf",
+          ".docx",
+          ".xlsx"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "元数据体检。默认只读体检，要清除会另存副本。",
+        "presets": [
+          {
+            "title": "体检（只读）",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "清除并另存副本",
+            "argv": [
+              "{file}",
+              "--strip",
+              "-o",
+              "{outdir}/{stem}_clean{ext}"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "strings",
@@ -2616,7 +3916,48 @@
         "hexview",
         "volatility3",
         "cyberchef"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "增强版 strings，支持 UTF-16 与 CJK。",
+        "presets": [
+          {
+            "title": "全部编码",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "只看 UTF-16LE",
+            "argv": [
+              "{file}",
+              "--enc",
+              "utf16"
+            ]
+          },
+          {
+            "title": "只看中文",
+            "argv": [
+              "{file}",
+              "--enc",
+              "cjk"
+            ]
+          },
+          {
+            "title": "带偏移",
+            "argv": [
+              "{file}",
+              "--with-offset"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "timeline",
@@ -2669,7 +4010,41 @@
         "deleted",
         "exiftool",
         "volatility3"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "文件系统时间线，按 mtime/ctime/atime 排序。拖目录或文件都可以。",
+        "presets": [
+          {
+            "title": "按修改时间排序",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "按创建时间排序",
+            "argv": [
+              "{file}",
+              "--sort",
+              "ctime"
+            ]
+          },
+          {
+            "title": "导出 CSV",
+            "argv": [
+              "{file}",
+              "--csv",
+              "{outdir}/timeline.csv"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "volatility3",
@@ -2749,7 +4124,77 @@
       ],
       "next": [
         "binwalk"
-      ]
+      ],
+      "run": {
+        "kind": "bat",
+        "input": "files",
+        "accept": [
+          ".raw",
+          ".mem",
+          ".dmp",
+          ".vmem",
+          ".img",
+          ".001"
+        ],
+        "multi": false,
+        "argv": [
+          "-f",
+          "{file}",
+          "windows.info"
+        ],
+        "intro": "内存取证。先 windows.info 确认镜像类型，再换插件。",
+        "cwd": "tool",
+        "presets": [
+          {
+            "title": "镜像信息",
+            "argv": [
+              "-f",
+              "{file}",
+              "windows.info"
+            ]
+          },
+          {
+            "title": "进程列表",
+            "argv": [
+              "-f",
+              "{file}",
+              "windows.pslist"
+            ]
+          },
+          {
+            "title": "网络连接",
+            "argv": [
+              "-f",
+              "{file}",
+              "windows.netscan"
+            ]
+          },
+          {
+            "title": "命令行历史",
+            "argv": [
+              "-f",
+              "{file}",
+              "windows.cmdline"
+            ]
+          },
+          {
+            "title": "注册表 hive 列表",
+            "argv": [
+              "-f",
+              "{file}",
+              "windows.registry.hivelist"
+            ]
+          },
+          {
+            "title": "文件扫描",
+            "argv": [
+              "-f",
+              "{file}",
+              "windows.filescan"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "geoip",
@@ -2825,7 +4270,38 @@
         "nmap",
         "wireshark",
         "theharvester"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "text",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{text}"
+        ],
+        "intro": "填 IP。有本地 .mmdb 库就离线查，没有会降级在线并明确提示。",
+        "presets": [
+          {
+            "title": "查单个 IP",
+            "argv": [
+              "{text}"
+            ]
+          },
+          {
+            "title": "批量查（填文件路径或拖文件）",
+            "argv": [
+              "--batch",
+              "{file}"
+            ]
+          },
+          {
+            "title": "看本机离线库状态",
+            "argv": [
+              "--info"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "shodanparse",
@@ -2891,7 +4367,42 @@
         "nmap",
         "theharvester",
         "cyberchef"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "files",
+        "accept": [
+          ".json"
+        ],
+        "multi": false,
+        "argv": [
+          "{file}"
+        ],
+        "intro": "解析 Shodan 导出的 JSON，聚合端口/产品/漏洞。",
+        "presets": [
+          {
+            "title": "总览",
+            "argv": [
+              "{file}"
+            ]
+          },
+          {
+            "title": "只看主机列表",
+            "argv": [
+              "{file}",
+              "--hosts"
+            ]
+          },
+          {
+            "title": "导出 CSV",
+            "argv": [
+              "{file}",
+              "--csv",
+              "{outdir}/shodan.csv"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "socmint",
@@ -2959,7 +4470,39 @@
         "theharvester",
         "nmap",
         "wireshark"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "text",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{text}"
+        ],
+        "intro": "填用户名，只发 HEAD 请求检查各平台是否存在。",
+        "presets": [
+          {
+            "title": "查全部平台",
+            "argv": [
+              "{text}"
+            ]
+          },
+          {
+            "title": "只查常见几个",
+            "argv": [
+              "{text}",
+              "--sites",
+              "github,reddit,keybase"
+            ]
+          },
+          {
+            "title": "列出支持的平台",
+            "argv": [
+              "--list"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "theharvester",
@@ -3014,7 +4557,52 @@
         "部分源依赖 playwright 浏览器内核，首次用需 playwright install",
         "仅用于公开信息收集与授权场景"
       ],
-      "next": []
+      "next": [],
+      "run": {
+        "kind": "bat",
+        "input": "text",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "-d",
+          "{text}",
+          "-b",
+          "all"
+        ],
+        "intro": "公开信息收集。填域名。仅用于授权目标。",
+        "cwd": "tool",
+        "presets": [
+          {
+            "title": "全源收集",
+            "argv": [
+              "-d",
+              "{text}",
+              "-b",
+              "all"
+            ]
+          },
+          {
+            "title": "只搜子域",
+            "argv": [
+              "-d",
+              "{text}",
+              "-b",
+              "duckduckgo"
+            ]
+          },
+          {
+            "title": "限制结果数",
+            "argv": [
+              "-d",
+              "{text}",
+              "-b",
+              "all",
+              "-l",
+              "200"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "whois",
@@ -3072,7 +4660,46 @@
         "theharvester",
         "nmap",
         "wireshark"
-      ]
+      ],
+      "run": {
+        "kind": "python",
+        "input": "text",
+        "accept": [],
+        "multi": false,
+        "argv": [
+          "{text}"
+        ],
+        "intro": "填域名或 IP。TCP 43 被封时用「走 RDAP」。",
+        "presets": [
+          {
+            "title": "WHOIS 查询",
+            "argv": [
+              "{text}"
+            ]
+          },
+          {
+            "title": "走 RDAP（HTTPS，更通）",
+            "argv": [
+              "{text}",
+              "--rdap"
+            ]
+          },
+          {
+            "title": "只看原始响应",
+            "argv": [
+              "{text}",
+              "--raw"
+            ]
+          },
+          {
+            "title": "离线解析已保存的响应",
+            "argv": [
+              "--file",
+              "{file}"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

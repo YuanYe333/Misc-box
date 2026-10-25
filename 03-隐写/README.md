@@ -150,6 +150,16 @@ python -X utf8 D:\杂项工具\_脚本\imgsize.py 题目.png
 ... imgsize.py D:\题目\ -r
 ```
 
+### 界面里怎么跑
+
+反推被篡改的真实宽高。pngcheck 漏检的情况它能抓到。
+
+把文件（可多个）拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.png`  `.bmp`  `.gif`  `.jpg`  `.jpeg`
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -244,6 +254,26 @@ PNG 打不开、CRC 报错、怀疑 tEXt 藏 flag、或要从 bin 里捞图片�
 ```
 .\pngcheck\png-fix-IDAT-windowsize.exe 图片.png
 ```
+
+### 界面里怎么跑
+
+PNG 结构校验。多文件可一起拖。
+
+把文件（可多个）拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.png`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 校验（-v，看 chunk 明细） | `-v {file}` |
+| 简洁校验（只报 OK/错误） | `{file}` |
+| 打印 tEXt 文本块 | `-t {file}` |
+| 只报错误 | `-q {file}` |
+| 在文件里搜内嵌 PNG | `-s {file}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -362,6 +392,23 @@ pngcheck 套件 → imgsize 长宽校验
 .\exiftool.exe -r D:\题目\
 ```
 
+### 界面里怎么跑
+
+读元数据：GPS、作者、注释、隐藏字段。
+
+把文件（可多个）拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 读全部元数据 | `{file}` |
+| 只看 GPS | `-GPS:all -a -g {file}` |
+| 含未知/隐藏字段 | `-a -u -g {file}` |
+| 导出 JSON | `-j -a -g {file}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -426,6 +473,25 @@ python -X utf8 audiospec.py 题目.wav --spec --start 2.5 --end 4.0 -o 片段.pn
 ```bat
 python -X utf8 audiospec.py 题目.wav --spec --channel R -o 右声道.png
 ```
+
+### 界面里怎么跑
+
+频谱藏字题。默认出频谱图，产物在下方列表里。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.wav`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 出频谱图（推荐） | `{file} --spec -o {outdir}/频谱.png` |
+| 出波形图 | `{file} --wave -o {outdir}/波形.png` |
+| 两张都出 | `{file} -o {outdir}/音频` |
+| 高分辨率频谱 | `{file} --spec --width 1400 --height 700 -o {outdir}/频谱_大.png` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -496,6 +562,26 @@ python -X utf8 lsb.py 图.png --plane 3 -o plane3.png
 python -X utf8 lsb.py 图.png --embed -f payload.bin -o 藏了东西.png
 ```
 
+### 界面里怎么跑
+
+LSB 提取。不知道参数时先跑「自动穷举」。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.png`  `.bmp`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 自动穷举通道/位平面/位序 | `{file}` |
+| 只看 RGB 最低位 | `{file} --channel all --bit 0` |
+| 看 Alpha 通道最低位 | `{file} --channel A --bit 0` |
+| 出第 3 位平面图 | `{file} --plane 3 -o {outdir}/plane3.png` |
+| 出第 0 位平面图 | `{file} --plane 0 -o {outdir}/plane0.png` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -563,6 +649,22 @@ python -X utf8 stegodetect.py 附件目录/ -r
 python -X utf8 stegodetect.py 题目.png --tail-dump -o tail.bin
 ```
 
+### 界面里怎么跑
+
+隐写总检：文件尾附加数据、多图对比、异常块。可一次拖多张图。
+
+把文件（可多个）拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 总检（可多选文件） | `{files}` |
+| 总检 + 导出尾部数据 | `{files} --tail-dump` |
+| 两张图对比 | `--diff {file} {text}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -627,6 +729,23 @@ python -X utf8 zipstego.py 题目.zip --dump-comment -o 注释.bin
 ```bat
 python -X utf8 zipstego.py 附件目录/ -r
 ```
+
+### 界面里怎么跑
+
+ZIP 伪加密 / 注释藏数据 / CRC 痕迹检测。
+
+把文件（可多个）拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.zip`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 检测 | `{files}` |
+| 导出 ZIP 注释 | `{files} --dump-comment {outdir}/注释.bin` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 

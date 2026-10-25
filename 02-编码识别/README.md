@@ -285,6 +285,16 @@ python -X utf8 encscan.py "ZmxhZ3t0ZXN0fQ=="
 python -X utf8 encscan.py -f 密文.txt --chain
 ```
 
+### 界面里怎么跑
+
+自动识别编码并尝试多层解码。文本文件拖进来即可。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.txt`  `.bin`  `.dat`  `.b64`  `.hex`
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -321,6 +331,27 @@ python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9 -d base64
 python -X utf8 bases.py --encode base32 flag{test}
 python -X utf8 bases.py 密文 -d base64 --alphabet "自定义表"
 ```
+
+### 界面里怎么跑
+
+Base 家族全家桶。不确定用哪种就先跑「自动探测」。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.txt`  `.bin`  `.dat`  `.b64`  `.hex`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 自动探测（推荐） | `-f {file}` |
+| Base64 解码 | `-d b64 -f {file}` |
+| Base32 解码 | `-d b32 -f {file}` |
+| Base58 解码 | `-d b58 -f {file}` |
+| Base85 解码 | `-d b85 -f {file}` |
+| 列出全部字母表 | `--list（不需要文件）` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -361,6 +392,26 @@ python -X utf8 xor.py 密文.hex --hex --keylen 3
 python -X utf8 xor.py 密文.hex --hex --key KEY
 python -X utf8 xor.py 密文.hex --hex --known-plaintext "flag{"
 ```
+
+### 界面里怎么跑
+
+XOR 爆破。需要密钥/明文/长度的预设，请在下框填对应内容。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.bin`  `.dat`  `.txt`  `.enc`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 爆破（推荐） | `-f {file}` |
+| 只看前 20 个候选 | `-f {file} --top 20` |
+| 按已知密钥解密（填密钥到文本框） | `-f {file} --key {text}` |
+| 已知明文攻击（填已知明文） | `-f {file} --known-plaintext {text}` |
+| 指定密钥长度（填数字） | `-f {file} --keylen {text}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -406,6 +457,23 @@ python -X utf8 hashcrack.py <hash> --mask "flag{?l?l?d?d}"
 python -X utf8 hashcrack.py --list-algos
 ```
 
+### 界面里怎么跑
+
+粘贴哈希值即可。先识别类型，再按类型爆破。
+
+选中后在「输入内容」框里填数据，点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 识别哈希类型 | `--identify {text}` |
+| 内置弱口令爆破 | `{text} --builtin` |
+| 掩码穷举（掩码填 ?d?d?d?d） | `{text} --mask {mask}` |
+| 列出支持的算法 | `--list-algos` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -449,6 +517,25 @@ python -X utf8 qrcode.py 反色.png --invert
 python -X utf8 qrcode.py 模糊.png --threshold 128
 python -X utf8 qrcode.py 题目.png --hex
 ```
+
+### 界面里怎么跑
+
+二维码/条码解码，纯标准库，不需要 zbar。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.png`  `.bmp`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 解码 | `{file}` |
+| 解码并打印模块矩阵 | `{file} --dump` |
+| 反色后解码（黑底白码） | `{file} --invert` |
+| 解码失败时看码字 | `{file} --hex` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 

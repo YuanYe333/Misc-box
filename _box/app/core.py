@@ -4,7 +4,11 @@
   * 读取 tools.json（唯一数据源）
   * 解析相对/绝对路径
   * 按声明方式启动工具（exe / bat / cli / html / script / shell / powershell）
-  * 提供搜索、按分类过滤、按扩展名推荐工具链
+  * 提供搜索、按分类过滤
+  * 暴露 run 配置（`Tool.runnable` / `Tool.run_raw`），供 runner.py 执行
+
+注意：按扩展名推荐工具链（`recommend_for_file`）只保留给外部脚本用，
+图形界面刻意不用——用户要求不做自动推荐，拖放只填当前选中的工具。
 """
 from __future__ import annotations
 
@@ -114,6 +118,16 @@ class Tool:
     @property
     def next_ids(self) -> list[str]:
         return self.raw.get("next") or []
+
+    @property
+    def run_raw(self) -> dict[str, Any]:
+        """tools.json 里的 ``run`` 字段（原样，交给 runner 解析）。"""
+        return self.raw.get("run") or {}
+
+    @property
+    def runnable(self) -> bool:
+        """能否在界面里「拖文件 → 点运行」。"""
+        return bool(self.run_raw.get("kind"))
 
     @property
     def exists(self) -> bool:
@@ -353,7 +367,12 @@ MAGIC_RECOMMEND: list[tuple[bytes, list[str]]] = [
 
 
 def recommend_for_file(tools: list[Tool], file_path: Path) -> list[Tool]:
-    """给定一个文件，返回推荐的工具链。"""
+    """给定一个文件，返回推荐的工具链。
+
+    ⚠️ 图形界面**不再调用**这个函数。用户明确要求不做「自动猜工具」：
+    拖进来的文件只会填进当前选中的那个工具。这里保留是因为
+    `_脚本/_new/smoke_core.py` 等外部脚本还在用它做批量检查。
+    """
     by_id = {t.id: t for t in tools}
     ids: list[str] = []
 

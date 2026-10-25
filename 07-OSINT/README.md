@@ -182,6 +182,22 @@ theHarvester -d example.com -b crtsh,anubis -l 200
 theHarvester -d example.com -b duckduckgo -f 结果
 ```
 
+### 界面里怎么跑
+
+公开信息收集。填域名。仅用于授权目标。
+
+选中后在「输入内容」框里填数据，点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 全源收集 | `-d {text} -b all` |
+| 只搜子域 | `-d {text} -b duckduckgo` |
+| 限制结果数 | `-d {text} -b all -l 200` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -233,6 +249,22 @@ python -X utf8 geoip.py --batch ips.txt --db Country.mmdb --json
 ```bat
 python -X utf8 geoip.py --db Country.mmdb --info
 ```
+
+### 界面里怎么跑
+
+填 IP。有本地 .mmdb 库就离线查，没有会降级在线并明确提示。
+
+选中后在「输入内容」框里填数据，点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 查单个 IP | `{text}` |
+| 批量查（填文件路径或拖文件） | `--batch {file}` |
+| 看本机离线库状态 | `--info` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -288,6 +320,24 @@ python -X utf8 shodanparse.py export.json --port 22 --csv -o hosts.csv
 python -X utf8 shodanparse.py export.json --cve CVE-2021-44228
 ```
 
+### 界面里怎么跑
+
+解析 Shodan 导出的 JSON，聚合端口/产品/漏洞。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.json`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 总览 | `{file}` |
+| 只看主机列表 | `{file} --hosts` |
+| 导出 CSV | `{file} --csv {outdir}/shodan.csv` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -340,6 +390,22 @@ python -X utf8 socmint.py someuser --sites github,gitlab,keybase,npm --json
 ```bat
 python -X utf8 socmint.py --list
 ```
+
+### 界面里怎么跑
+
+填用户名，只发 HEAD 请求检查各平台是否存在。
+
+选中后在「输入内容」框里填数据，点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 查全部平台 | `{text}` |
+| 只查常见几个 | `{text} --sites github,reddit,keybase` |
+| 列出支持的平台 | `--list` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -395,6 +461,23 @@ python -X utf8 whois.py 8.8.8.8
 ```bat
 python -X utf8 whois.py example.com --rdap --json
 ```
+
+### 界面里怎么跑
+
+填域名或 IP。TCP 43 被封时用「走 RDAP」。
+
+选中后在「输入内容」框里填数据，点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| WHOIS 查询 | `{text}` |
+| 走 RDAP（HTTPS，更通） | `{text} --rdap` |
+| 只看原始响应 | `{text} --raw` |
+| 离线解析已保存的响应 | `--file {file}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 

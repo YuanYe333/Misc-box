@@ -157,6 +157,22 @@ vol -f memory.raw -o 输出目录 windows.filescan
 .\binwalk\binwalk.bat -A 题目.bin
 ```
 
+### 界面里怎么跑
+
+文件签名扫描、自动提取、熵分析。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 扫描签名 | `{file}` |
+| 熵分析 | `-E {file}` |
+| 扫描并自动提取 | `-e {file}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -212,6 +228,22 @@ cd D:\杂项工具\foremost
 ```
 .\foremost.exe -t jpg,png,gif -i 题目.bin -o 输出目录
 ```
+
+### 界面里怎么跑
+
+按文件头尾雕刻恢复。binwalk 失败时兜底，产物在输出目录的 zip/png 等子目录里。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 雕刻全部类型 | `-i {file} -o {outdir}/foremost` |
+| 只雕图片 | `-i {file} -o {outdir}/foremost -t png,jpg,gif` |
+| 只雕压缩包 | `-i {file} -o {outdir}/foremost -t zip,rar,pdf` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -298,6 +330,27 @@ vol -f memory.raw windows.dumpfiles --virtaddr 0x...
 vol -f memory.raw windows.registry.hivelist
 ```
 
+### 界面里怎么跑
+
+内存取证。先 windows.info 确认镜像类型，再换插件。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.raw`  `.mem`  `.dmp`  `.vmem`  `.img`  `.001`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 镜像信息 | `-f {file} windows.info` |
+| 进程列表 | `-f {file} windows.pslist` |
+| 网络连接 | `-f {file} windows.netscan` |
+| 命令行历史 | `-f {file} windows.cmdline` |
+| 注册表 hive 列表 | `-f {file} windows.registry.hivelist` |
+| 文件扫描 | `-f {file} windows.filescan` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -347,6 +400,22 @@ python -X utf8 deleted.py --drive D
 ```bat
 python -X utf8 deleted.py --mft MFT.dd --csv 已删除.csv
 ```
+
+### 界面里怎么跑
+
+NTFS 已删除文件枚举。直接读盘需要管理员权限，拖 MFT 镜像则不用。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 从 MFT 镜像枚举（拖文件） | `--mft {file}` |
+| 从 MFT 镜像导出 CSV | `--mft {file} --csv {outdir}/deleted.csv` |
+| 读某个盘的 MFT（填盘符，需管理员） | `--drive {text}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -398,6 +467,23 @@ python -X utf8 hexview.py 文件.bin -o 0x100 -n 512
 python -X utf8 hexview.py 文件.bin -s 504b0304
 ```
 
+### 界面里怎么跑
+
+十六进制查看。要搜东西就在下框填十六进制串或文本。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 看开头 512 字节 | `{file} -n 512` |
+| 看全部 | `{file} -n 1048576` |
+| 搜十六进制串 | `{file} -s {text}` |
+| 搜文本 | `{file} -t {text}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -440,6 +526,23 @@ python -X utf8 metawipe.py 图片.jpg
 ```bat
 python -X utf8 metawipe.py 图片.jpg --strip -o 干净.jpg
 ```
+
+### 界面里怎么跑
+
+元数据体检。默认只读体检，要清除会另存副本。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.jpg`  `.jpeg`  `.png`  `.tif`  `.tiff`  `.pdf`  `.docx`  `.xlsx`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 体检（只读） | `{file}` |
+| 清除并另存副本 | `{file} --strip -o {outdir}/{stem}_clean{ext}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
@@ -490,6 +593,23 @@ python -X utf8 strings.py 文件.bin -r "flag\{.*\}"
 python -X utf8 strings.py 文件.bin --enc utf16 --with-offset
 ```
 
+### 界面里怎么跑
+
+增强版 strings，支持 UTF-16 与 CJK。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 全部编码 | `{file}` |
+| 只看 UTF-16LE | `{file} --enc utf16` |
+| 只看中文 | `{file} --enc cjk` |
+| 带偏移 | `{file} --with-offset` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -539,6 +659,22 @@ python -X utf8 timeline.py 目录 --sort atime
 ```bat
 python -X utf8 timeline.py 目录 --since 2026-01-01 --csv 时间线.csv
 ```
+
+### 界面里怎么跑
+
+文件系统时间线，按 mtime/ctime/atime 排序。拖目录或文件都可以。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 按修改时间排序 | `{file}` |
+| 按创建时间排序 | `{file} --sort ctime` |
+| 导出 CSV | `{file} --csv {outdir}/timeline.csv` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 

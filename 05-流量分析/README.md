@@ -224,6 +224,25 @@ tshark -r 题目.pcap -q -z conv,tcp
 双击卡片「打开工具」→ Wireshark 图形界面 → 统计/追踪流
 ```
 
+### 界面里怎么跑
+
+命令行批量处理、导出对象、追踪流。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.pcap`  `.pcapng`  `.cap`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 协议层次统计 | `-r {file} -q -z io,phs` |
+| 导出 HTTP 对象 | `-r {file} --export-objects http,{outdir}/http` |
+| 只看 HTTP 请求 | `-r {file} -Y http.request -T fields -e http.host -e http.request.uri` |
+| TCP 对话统计 | `-r {file} -q -z conv,tcp` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -288,6 +307,22 @@ nmap
 .\nmap.exe -sV --script http-title,http-headers -p 80,443 目标
 ```
 
+### 界面里怎么跑
+
+端口扫描。只对自己有权限的目标用。
+
+选中后在「输入内容」框里填数据，点「▶ 运行」。
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 服务识别（-sV） | `-sV {text}` |
+| 快速扫描（-F） | `-F {text}` |
+| 全端口（-p-） | `-p- {text}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -348,6 +383,25 @@ python -X utf8 dnsdump.py 题目.pcap --stats
 python -X utf8 dnsdump.py 题目.pcap --csv -o dns.csv
 ```
 
+### 界面里怎么跑
+
+DNS 批量导出 + 隧道特征识别。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.pcap`  `.pcapng`  `.cap`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 总览 | `{file}` |
+| 只看 DNS 隧道特征 | `{file} --tunnel` |
+| 尝试解码隧道数据 | `{file} --tunnel --decode` |
+| 导出 CSV | `{file} --csv -o {outdir}/dns.csv` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -398,6 +452,24 @@ python -X utf8 pcapcarve.py 题目.pcap --list
 python -X utf8 pcapcarve.py 题目.pcapng -o 全部内容.txt --force
 ```
 
+### 界面里怎么跑
+
+从 pcap 提取 HTTP/FTP/Telnet 明文内容。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.pcap`  `.pcapng`  `.cap`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 列出可提取的流 | `{file} --list` |
+| 提取全部明文到目录 | `{file} -o {outdir}/carved` |
+| 跟随某条流（填流号到文本框） | `{file} --follow {text}` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -447,6 +519,23 @@ python -X utf8 tcpextract.py 题目.pcap --list
 python -X utf8 tcpextract.py 题目.pcap --stream 2 -o 导出
 ```
 
+### 界面里怎么跑
+
+按流重组 TCP 会话并导出。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.pcap`  `.pcapng`  `.cap`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 列出所有 TCP 流 | `{file} --list` |
+| 导出全部流到目录 | `{file} --all -o {outdir}/streams` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
+
 ### 参数速查
 
 | 参数 | 说明 |
@@ -495,6 +584,25 @@ python -X utf8 usbhid.py 题目.pcap --list
 ```bat
 python -X utf8 usbhid.py 题目.pcap --all -o 轨迹.png
 ```
+
+### 界面里怎么跑
+
+USB HID 键盘/鼠标流量还原，CTF 高频。
+
+把文件拖进窗口，或点拖放区选文件，然后点「▶ 运行」。
+
+接受：`.pcap`  `.pcapng`  `.cap`
+
+「运行方式」下拉里的预设：
+
+| 运行方式 | 说明 |
+| --- | --- |
+| 列出 USB 设备 | `{file} --list` |
+| 键盘流量还原 | `{file} --keyboard` |
+| 键盘 + 鼠标 | `{file} --all` |
+| 看原始 HID 数据 | `{file} --raw` |
+
+> 输出会实时刷在下方面板，跑出来的文件在 `_box\work\runs\<时间戳>_<工具id>\`，点「📂 输出目录」直接打开。
 
 ### 参数速查
 
