@@ -20,6 +20,21 @@ $ErrorActionPreference = 'Stop'
 $curl = Join-Path $env:SystemRoot 'System32\curl.exe'
 if (-not (Test-Path -LiteralPath $curl)) { $curl = 'curl.exe' }
 
+function Get-RemoteSize {
+    param([string]$u)
+    # HEAD first; fall back to a 1-byte ranged GET (some mirrors reject HEAD).
+    $len = & $curl -s --ssl-no-revoke --head --location --max-time 30 $u 2>$null |
+        Select-String -Pattern '^content-length:\s*(\d+)' -CaseSensitive:$false |
+        ForEach-Object { [int64]$_.Matches[0].Groups[1].Value } |
+        Select-Object -Last 1
+    if ($len -and $len -gt 0) { return $len }
+    $cr = & $curl -s --ssl-no-revoke --location --max-time 30 -r 0-0 -D - -o NUL $u 2>$null |
+        Select-String -Pattern '^content-range:\s*bytes\s+\d+-\d+/(\d+)' -CaseSensitive:$false |
+        ForEach-Object { [int64]$_.Matches[0].Groups[1].Value } |
+        Select-Object -Last 1
+    if ($cr -and $cr -gt 0) { return $cr }
+    return 0
+}
 function Get-Hash {
     param([string]$path)
     return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLower()
@@ -55,12 +70,36 @@ if ($OutDir -and -not (Test-Path -LiteralPath $OutDir)) {
     New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 }
 
-# Already present and matching? Skip.
-if ((Test-Path -LiteralPath $Out) -and $Sha256) {
-    $existing = Get-Hash $Out
-    if ($existing -eq $Sha256.ToLower()) {
-        Write-Host ("  already present, sha256 OK: {0}" -f (Split-Path -Leaf $Out)) -ForegroundColor DarkGray
-        exit 0
+# Already present? Skip the download.
+# With a sha256 we can prove the bytes are right. Without one, fall back to
+# comparing the remote size: a 62 MB archive that is already sitting there
+# should never be downloaded a second time just because no hash was published.
+if (Test-Path -LiteralPath $Out) {
+    $haveBytes = (Get-Item -LiteralPath $Out).Length
+    if ($Sha256) {
+        $existing = Get-Hash $Out
+        if ($existing -eq $Sha256.ToLower()) {
+            Write-Host ("  already present, sha256 OK: {0}" -f (Split-Path -Leaf $Out)) -ForegroundColor DarkGray
+            exit 0
+        }
+        Write-Host '  existing file does not match sha256 - re-downloading' -ForegroundColor Yellow
+    } else {
+        $remoteBytes = 0
+        try { $remoteBytes = Get-RemoteSize $Url } catch { $remoteBytes = 0 }
+        if ($remoteBytes -gt 0 -and $haveBytes -eq $remoteBytes) {
+            Write-Host ("  already present, size matches ({0} MB): {1}" -f `
+                [math]::Round($haveBytes / 1MB, 1), (Split-Path -Leaf $Out)) -ForegroundColor DarkGray
+            exit 0
+        }
+        if ($remoteBytes -gt 0 -and $haveBytes -gt $remoteBytes) {
+            Write-Host '  existing file is larger than the remote - re-downloading' -ForegroundColor Yellow
+        } elseif ($remoteBytes -gt 0) {
+            Write-Host ("  existing file is incomplete ({0} of {1} MB) - resuming" -f `
+                [math]::Round($haveBytes / 1MB, 1), [math]::Round($remoteBytes / 1MB, 1)) -ForegroundColor DarkGray
+        } else {
+            Write-Host '  cannot determine remote size - treating existing file as complete' -ForegroundColor DarkYellow
+            exit 0
+        }
     }
 }
 
@@ -79,21 +118,6 @@ if ($Proxy) {
 # that a stalled connection falls through to the next candidate quickly.
 $attemptTimeout = 120
 
-function Get-RemoteSize {
-    param([string]$u)
-    # HEAD first; fall back to a 1-byte ranged GET (some mirrors reject HEAD).
-    $len = & $curl -s --ssl-no-revoke --head --location --max-time 30 $u 2>$null |
-        Select-String -Pattern '^content-length:\s*(\d+)' -CaseSensitive:$false |
-        ForEach-Object { [int64]$_.Matches[0].Groups[1].Value } |
-        Select-Object -Last 1
-    if ($len -and $len -gt 0) { return $len }
-    $cr = & $curl -s --ssl-no-revoke --location --max-time 30 -r 0-0 -D - -o NUL $u 2>$null |
-        Select-String -Pattern '^content-range:\s*bytes\s+\d+-\d+/(\d+)' -CaseSensitive:$false |
-        ForEach-Object { [int64]$_.Matches[0].Groups[1].Value } |
-        Select-Object -Last 1
-    if ($cr -and $cr -gt 0) { return $cr }
-    return 0
-}
 
 $ok = $false
 foreach ($u in $candidates) {

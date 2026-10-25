@@ -66,7 +66,7 @@
       "version": "1.9.0-jumbo-1",
       "url": "https://www.openwall.com/john/k/john-1.9.0-jumbo-1-win64.zip",
       "asset": "john-1.9.0-jumbo-1-win64.zip",
-      "sha256": "",
+      "sha256": "7d59ea68d39a30a4988c9eb751a57d37d3fd90150ceeb6ee9afc2a76d13daa16",
       "extract": "zip",
       "target": "john",
       "entry": "john-1.9.0-jumbo-1-win64/run/john.exe",
