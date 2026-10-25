@@ -120,6 +120,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File _box\setup.ps1
 
 > `❌` 和 `⚠️` 的项会在 bootstrap 时打印说明与官方链接，不会尝试下载。
 
+还有两个**不需要下载**的本地组件，跟着仓库一起就有：
+
+| 组件 | 分类 | 说明 |
+| --- | --- | --- |
+| `imgsize` | 隐写 | 本工具箱自带的 `imgsize.py` + `.bat`，读图片长宽/位深/通道，秒查图片头 |
+| `hashcat-panel` | 压缩包 | 图形界面包装 hashcat，省得记命令行参数（需先装 hashcat） |
+
+以及 `setup`（环境自检）、`python-runtime`、`java-runtime` 三个运行时条目，
+它们只是把系统里已有的 Python/Java 登记进 `tools.json`，方便在界面里查版本。
+
 ---
 
 ## 目录结构
