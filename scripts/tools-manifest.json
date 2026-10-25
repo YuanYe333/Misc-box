@@ -225,7 +225,7 @@
       "target": "binwalk",
       "entry": "binwalk.bat",
       "auto": false,
-      "note": "Needs a Windows compatibility patch before it installs. See docs/06-取证.md."
+      "note": "Needs a Windows compatibility patch before it installs. See 06-取证/README.md."
     },
     {
       "id": "npcap",
