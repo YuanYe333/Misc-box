@@ -309,6 +309,51 @@ D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -m pip install vol
 ... -m pip install https://github.com/laramies/theHarvester/archive/refs/tags/4.11.1.tar.gz
 ```
 
+## 关于中文路径（`D:\杂项工具`）
+
+**结论先说：中文路径本身不影响工具运行。** 本机实测：在 `D:\杂项工具\06-取证\`
+下直接用 `python -m venv` 建的虚拟环境，`tempfile.gettempdir()` 返回正常，
+`sqlite3` 能建库，Volatility 3 和 theHarvester 都能跑。
+
+`pyvenv.cfg` 里那行 `command = ... -m venv D:\鏉傞」宸ュ叿\...` 看起来像乱码，
+但那只是该文件里**路径的显示形式**（创建时按控制台代码页写入），
+Python 运行时不靠这行定位，所以**看到乱码不等于坏了**，不用去修它。
+
+判断一个 venv 是否健康，看实际行为而不是看 `pyvenv.cfg`：
+
+```powershell
+# 应输出 C:\Users\<你>\AppData\Local\Temp（或你的系统临时目录）
+# 若输出的是工具箱目录本身，才是真的坏了
+D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -c "import tempfile; print(tempfile.gettempdir())"
+```
+
+如果确实遇到 `tempfile` 指向工作目录、`sqlite3.OperationalError: unable to open
+database file` 这类症状，再按下面处理（把 venv 实体放到英文路径 + junction 挂回）：
+
+```powershell
+# 1. 在英文路径建 venv
+C:\Python312\python.exe -m venv D:\miscbox-venvs\volatility3
+D:\miscbox-venvs\volatility3\Scripts\python.exe -m pip install volatility3 ^
+  -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 2. 原中文路径的 venv 改名备份（确认新 venv 可用后再删）
+Rename-Item 'D:\杂项工具\06-取证\volatility3\venv' 'venv_old_cnpath'
+
+# 3. 建 junction（不需要管理员）
+cmd /c mklink /J "D:\杂项工具\06-取证\volatility3\venv" "D:\miscbox-venvs\volatility3"
+
+# 4. 验证
+D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -c "import tempfile; print(tempfile.gettempdir())"
+```
+
+> **如果想让工具箱更省心**：放在纯英文路径（如 `D:\miscbox`）能少一类问题，
+> 但这是可选项，不是必须。中文路径在实测中工作正常。
+
+**Volatility 3 的符号缓存**默认写到 `%APPDATA%\volatility3\`
+（`C:\Users\<你>\AppData\Roaming\volatility3\`）。首次运行会生成
+`identifier.cache`；若该目录不可写，才会出现 `unable to open database file`。
+可以用 `--cache-path` 指定别处。
+
 ## 下一步
 
 自检全绿之后，按题目类型进入对应分类：拿到乱码去 **编码识别**，拿到图片去 **隐写**，
