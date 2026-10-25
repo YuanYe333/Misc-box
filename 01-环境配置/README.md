@@ -363,9 +363,56 @@ D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -c "import tempfil
 
 | 工具 | 版本 | 一句话说明 |
 | --- | --- | --- |
+| [环境体检](#envcheck) | 1.0 | 下载后先跑这个：列出缺哪些外部程序、28 个自带脚本是否正常。 |
 | [环境自检](#setup) | 1.0.0 | 一键探测本机运行时与全部工具是否就绪，输出红黄绿清单并生成环境报告。 |
 | [Python 运行时](#python-runtime) | 3.14.8 / 3.12.10 | 工具箱内自研脚本与 Python 系工具的基础运行时，两个版本并存。 |
 | [Java 运行时](#java-runtime) | 17 | StegSolve、部分 JAR 版工具的依赖。 |
+
+---
+
+<a id="envcheck"></a>
+
+## 环境体检 · envcheck.py
+
+**类型**：script  
+**位置**：`01-环境配置/scripts/envcheck.py`
+
+> 下载后第一件事：查这台机器缺什么、28 个自带脚本是否正常、目录结构是否完整。
+
+### 什么时候用
+
+刚 clone 完不确定能不能用；或者某个工具打不开，想知道是环境问题还是工具本身的问题。
+
+### 怎么用
+
+```bat
+python -X utf8 envcheck.py
+python -X utf8 envcheck.py --json
+```
+
+也可以直接双击 `01-环境配置\scripts\envcheck.bat`。
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--json` | 输出 JSON 而不是人读文本；退出码 0 表示环境正常 |
+
+### 输出什么
+
+1. **外部程序**：7z / tshark / nmap / hashcat / john / exiftool / perl /
+   binwalk / foremost / volatility3 / java，逐个报版本或「未找到」
+2. **自带脚本**：28 个 Python 脚本按分类列出，检查文件在不在、语法对不对
+3. **目录结构**：`_box`、`setup.ps1`、`bootstrap.ps1` 等关键文件是否齐全
+4. **结论**：环境正常 / 缺什么 / 该跑哪个脚本补
+
+### 踩坑提醒
+
+- 只读探测，**不联网、不改任何文件**，可以放心反复跑
+- 它只查「程序在不在、能不能报出版本」，不保证功能一定对；真要用还是点开对应工具试
+- 7z / tshark 这类装在 `C:\Program Files` 但没进 PATH 的，脚本会去常见目录找，找不到才判缺失
+- 报「可选工具未装」不算错误——那些是 `bootstrap.ps1` 负责下载的，不影响 28 个自带脚本使用
+- 必需项缺失时退出码为 1，正常为 0，方便脚本/CI 判断
 
 ---
 

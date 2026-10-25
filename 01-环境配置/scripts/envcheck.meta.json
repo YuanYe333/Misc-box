@@ -1,0 +1,45 @@
+{
+  "id": "envcheck",
+  "category": "env",
+  "name": "环境体检",
+  "name_en": "envcheck.py",
+  "summary": "下载后第一件事：查这台机器缺什么、28 个自带脚本是否正常、目录结构是否完整。",
+  "when": "刚 clone 完不确定能不能用；或者某个工具打不开，想知道是环境问题还是工具问题。",
+  "usage": [
+    {
+      "title": "双击跑一遍",
+      "steps": [
+        "双击 01-环境配置\\scripts\\envcheck.bat",
+        "会列出外部程序（7z/tshark/nmap 等）是否可用、缺哪些",
+        "再列出 28 个自带脚本是否齐全、语法是否正常",
+        "最后给结论：环境正常 / 缺什么 / 该跑哪个脚本补"
+      ]
+    },
+    {
+      "title": "命令行跑（看完不暂停）",
+      "code": "python -X utf8 envcheck.py"
+    },
+    {
+      "title": "输出 JSON（给脚本或 CI 用）",
+      "code": "python -X utf8 envcheck.py --json"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--json",
+      "desc": "输出 JSON 而不是人读文本，退出码 0 表示环境正常"
+    }
+  ],
+  "pitfalls": [
+    "只读探测，不联网、不改任何文件，可以放心反复跑。",
+    "它只查「程序在不在、能不能报出版本」，不保证功能一定对；真要用还是点开对应工具试一下。",
+    "7z / tshark 这类装在 C:\\Program Files 但没进 PATH 的，脚本会去常见目录找，找不到才判缺失。",
+    "报告「可选工具未装」不算错误——那些是 bootstrap.ps1 负责下载的，不影响 28 个自带脚本使用。",
+    "必需项缺失时退出码为 1，方便脚本判断；正常为 0。"
+  ],
+  "next": [
+    "setup",
+    "python-runtime",
+    "java-runtime"
+  ]
+}
