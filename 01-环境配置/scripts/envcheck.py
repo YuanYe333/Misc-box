@@ -31,14 +31,11 @@ EXTERNAL = [
 ]
 
 # 本仓库自带的 Python 脚本，按分类列出，检查能否 import/运行
-SCRIPTS = {
-    "02-编码识别": ["encscan", "bases", "xor", "hashcrack", "qrcode"],
-    "03-隐写": ["imgsize", "lsb", "stegodetect", "audiospec", "zipstego"],
-    "04-压缩包与文件修复": ["filetype", "filecarve", "zipfix", "fakeenc", "crc32bf"],
-    "05-流量分析": ["pcapcarve", "dnsdump", "tcpextract", "usbhid"],
-    "06-取证": ["hexview", "strings", "timeline", "metawipe", "deleted"],
-    "07-OSINT": ["whois", "shodanparse", "geoip", "socmint"],
-}
+# 参与体检的分类目录（按展示顺序）
+CATEGORIES = [
+    "01-环境配置", "02-编码识别", "03-隐写", "04-压缩包与文件修复",
+    "05-流量分析", "06-取证", "07-OSINT",
+]
 
 MIN_PY = (3, 9)
 
@@ -162,20 +159,30 @@ def check_external(root=None):
     return rows
 
 
+def discover_scripts(root):
+    """扫描各分类 scripts 目录，返回 {分类: [脚本名(不含.py)]}。"""
+    found = {}
+    for cat in CATEGORIES:
+        sdir = os.path.join(root, cat, "scripts")
+        if not os.path.isdir(sdir):
+            continue
+        names = sorted(f[:-3] for f in os.listdir(sdir)
+                       if f.endswith(".py"))
+        if names:
+            found[cat] = names
+    return found
+
+
 def check_scripts(root):
-    """检查仓库自带的 .py 是否都在，并抽查能否编译。"""
+    """检查仓库自带的 .py 是否都在，并逐个编译（不执行，避免副作用）。"""
     import py_compile
     import tempfile
 
     rows = []
-    for cat, names in SCRIPTS.items():
+    for cat, names in discover_scripts(root).items():
         sdir = os.path.join(root, cat, "scripts")
         for name in names:
             p = os.path.join(sdir, name + ".py")
-            if not os.path.isfile(p):
-                rows.append((cat, name, False, "文件缺失"))
-                continue
-            # 只编译不执行，避免触发副作用
             try:
                 with tempfile.TemporaryDirectory() as td:
                     py_compile.compile(p, cfile=os.path.join(td, "x.pyc"),
@@ -265,7 +272,7 @@ def report(root, ext_rows, scr_rows, lay_rows, as_json):
     by_cat = {}
     for cat, name, ok, detail in scr_rows:
         by_cat.setdefault(cat, []).append((name, ok, detail))
-    for cat in SCRIPTS:
+    for cat in CATEGORIES:
         items = by_cat.get(cat, [])
         bad = [i for i in items if not i[1]]
         if bad:
