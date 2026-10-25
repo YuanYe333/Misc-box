@@ -1,0 +1,46 @@
+{
+  "id": "crc32bf",
+  "category": "archive",
+  "name": "CRC32 反推/修复",
+  "name_en": "crc32bf.py",
+  "summary": "暴力反推 CRC32 缺失的短字节，或一键修复 PNG 所有块 CRC。",
+  "when": "PNG 块 CRC 被改导致打不开，或已知 CRC 缺几个字符要还原。",
+  "usage": [
+    {
+      "title": "反推缺失字节",
+      "code": "python -X utf8 crc32bf.py --prefix \"AB\" --crc 0x112787e6 --len 2"
+    },
+    {
+      "title": "修 PNG 的 CRC",
+      "code": "python -X utf8 crc32bf.py --fix-png 坏图.png -o 修好.png"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--prefix",
+      "desc": "已知的前缀内容"
+    },
+    {
+      "flag": "--crc",
+      "desc": "目标 CRC32（0x 开头或十进制）"
+    },
+    {
+      "flag": "--len",
+      "desc": "缺失字节数（默认 2，超过 4 会很慢）"
+    },
+    {
+      "flag": "--charset",
+      "desc": "printable/lower/upper/digit/alnum/hex/flag"
+    }
+  ],
+  "pitfalls": [
+    "暴力枚举限制在 4 字节以内；4 字节 95^4 要跑几分钟",
+    "只支持 CRC32（IEEE 0xEDB88320），不支持 CRC16/CRC64",
+    "--fix-png 只修 CRC，修不了「数据本身被改坏」"
+  ],
+  "next": [
+    "pngcheck",
+    "filecarve",
+    "cyberchef"
+  ]
+}

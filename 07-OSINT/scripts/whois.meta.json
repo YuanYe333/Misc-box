@@ -1,0 +1,51 @@
+{
+  "id": "whois",
+  "category": "osint",
+  "name": "域名/IP 归属查询",
+  "name_en": "whois.py",
+  "summary": "查域名或 IP 的注册人、注册商、注册/到期时间，支持 WHOIS 与 RDAP 双通道和 ASN 归属。",
+  "when": "题目给了一个域名或 IP，想知道它属于谁、什么时候注册的、解析到哪个网段。",
+  "usage": [
+    {
+      "title": "查域名注册信息",
+      "code": "python -X utf8 whois.py example.com"
+    },
+    {
+      "title": "查 IP 的归属网段与 ASN",
+      "code": "python -X utf8 whois.py 8.8.8.8"
+    },
+    {
+      "title": "WHOIS 被墙时改走 RDAP",
+      "code": "python -X utf8 whois.py example.com --rdap --json"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--rdap",
+      "desc": "改用 HTTPS 的 RDAP 接口（TCP 43 被防火墙拦时用这个）"
+    },
+    {
+      "flag": "--json",
+      "desc": "输出结构化 JSON，方便后续脚本处理"
+    },
+    {
+      "flag": "--timeout",
+      "desc": "单次查询超时秒数，默认 10"
+    },
+    {
+      "flag": "-o/--output",
+      "desc": "写入文件，已存在需加 --force"
+    }
+  ],
+  "pitfalls": [
+    "很多网络环境会封掉 TCP 43 端口，此时纯 WHOIS 必然超时；先用 --rdap 试，RDAP 走 443 通常能通。",
+    "WHOIS 返回的注册人信息绝大多数已被 GDPR 打码成 REDACTED FOR PRIVACY，查不到真人姓名是正常的，别以为是脚本坏了。",
+    "IP 的 whois 要逐级查（IANA → RIR → 分配到的组织），只看第一跳会误以为整个网段都归 IANA。",
+    "返回文本是「键: 值」的自由格式，不同注册商字段名不统一，脚本只能提取常见字段，完整内容要看原文。"
+  ],
+  "next": [
+    "theharvester",
+    "nmap",
+    "wireshark"
+  ]
+}

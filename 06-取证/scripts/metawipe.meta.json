@@ -1,0 +1,42 @@
+{
+  "id": "metawipe",
+  "category": "forensics",
+  "name": "元数据体检/清除",
+  "name_en": "metawipe.py",
+  "summary": "挖出 JPEG/PNG/GIF 里的 EXIF/GPS/注释/缩略图，并可无损清除。",
+  "when": "怀疑图片藏了 GPS/设备信息/内嵌缩略图，或发图前要去隐私。",
+  "usage": [
+    {
+      "title": "体检",
+      "code": "python -X utf8 metawipe.py 图片.jpg"
+    },
+    {
+      "title": "清除并另存",
+      "code": "python -X utf8 metawipe.py 图片.jpg --strip -o 干净.jpg"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--strip",
+      "desc": "清除元数据（需配 -o）"
+    },
+    {
+      "flag": "-o",
+      "desc": "清除后另存为这个文件"
+    },
+    {
+      "flag": "--force",
+      "desc": "允许覆盖已存在的输出文件"
+    }
+  ],
+  "pitfalls": [
+    "EXIF 里的缩略图常是原图副本，能还原被裁剪掉的内容",
+    "--strip 只删元数据段不动图像数据，所以画质无损",
+    "不处理 HEIC/RAW/PDF（这些用 exiftool）"
+  ],
+  "next": [
+    "exiftool",
+    "imgsize",
+    "stegsolve"
+  ]
+}

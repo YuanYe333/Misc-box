@@ -1,0 +1,49 @@
+{
+  "id": "zipstego",
+  "category": "stego",
+  "name": "ZIP 隐写检测",
+  "name_en": "zipstego.py",
+  "summary": "查 ZIP 伪加密、注释藏数据、EOCD 后附加数据、隐藏条目，并可一键修复伪加密。",
+  "when": "ZIP 打开要密码但题目没给，或者怀疑 ZIP 里除了看得见的文件还藏了别的东西。",
+  "usage": [
+    {
+      "title": "先体检",
+      "steps": [
+        "python -X utf8 zipstego.py 题目.zip",
+        "看到「伪加密」就直接用 --clean 修；看到「注释里内嵌 ZIP」就用 --dump-comment 取出来",
+        "结果按 [高]/[中]/[低] 排序，[高] 是确定性的"
+      ]
+    },
+    {
+      "title": "修复伪加密",
+      "steps": [
+        "python -X utf8 zipstego.py 伪加密.zip --clean -o 修好了.zip",
+        "脚本只清标志位里的 bit0，字节数不变，CRC 和压缩数据都不动",
+        "修完用 7zip 直接打开，不需要密码"
+      ]
+    },
+    {
+      "title": "导出注释",
+      "code": "python -X utf8 zipstego.py 题目.zip --dump-comment -o 注释.bin"
+    },
+    {
+      "title": "整目录扫",
+      "code": "python -X utf8 zipstego.py 附件目录/ -r"
+    }
+  ],
+  "params": [
+    {"flag": "--dump-comment", "desc": "把 EOCD 注释导出成文件"},
+    {"flag": "--clean", "desc": "修复伪加密，必须配 -o 指定输出文件名"},
+    {"flag": "-o", "desc": "输出文件"},
+    {"flag": "-r", "desc": "目录递归"},
+    {"flag": "-v", "desc": "打印每个条目的 method/大小/加密状态"},
+    {"flag": "--force", "desc": "允许覆盖已存在文件"}
+  ],
+  "pitfalls": [
+    "伪加密的判定看「本地头 flags」和「中央目录 flags」是否一致。只改一处的题（本地头置位、中央目录没置位）最坑：7-Zip 看中央目录直接就能解，Windows 资源管理器却弹密码框，两边现象不一样，别以为是文件坏了。",
+    "真加密和伪加密都表现为「flags bit0 = 1」。脚本用「csize 是否比 usize 大至少 12 字节」来区分——真 ZipCrypto 会加 12 字节加密头。但如果出题人对存储方式（method=0）且内容恰好加密后长度不变做了特殊处理，这个判据会失准，此时脚本会明确说「无法确认」，不会硬改。",
+    "--clean 只动「已确认是伪加密」的条目。真加密的条目一律保留，否则会把本来能用密码解开的包改成彻底打不开。修完一定要先用 7zip 打开验证。",
+    "注释长度字段是 16 位的，最大 65535。如果注释超长被截断，EOCD 的注释长度和实际剩余字节数会对不上，脚本会报「注释长度字段与实际不符」——这本身就是一条线索，别当成文件损坏。"
+  ],
+  "next": ["7zip", "binwalk", "archpr"]
+}

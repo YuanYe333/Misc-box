@@ -116,6 +116,78 @@ CTF 常把 3~5 层编码串起来。**不要凭感觉猜顺序**，按这个流�
 - **自定义码表**：题目给一张映射表（比如 A→Q）时，用 `Substitute` 操作按表替换，
   不要手动一个个改。
 
+## 本地补充工具（命令行脚本）
+
+除了 CyberChef，本分类还带 5 个纯 Python 脚本，**不联网、不用装依赖**，
+适合「题目能直接给字符串、我想在命令行里一把跑完」的场景。
+每个脚本所在目录都有同名 `.bat`，双击即可运行（会提示你拖入文件或输入内容）。
+
+| 脚本 | 什么时候用它 |
+| --- | --- |
+| `encscan.py` | 一串字符不知道是什么编码，先让它猜，并自动剥多层 |
+| `bases.py` | 明确是 Base 家族（16/32/58/64/85/91/100），要互转或批量解 |
+| `xor.py` | 怀疑 XOR 加密，要爆破单字节密钥或恢复多字节密钥 |
+| `hashcrack.py` | 拿到一串哈希，要先认算法再撞明文 |
+| `qrcode.py` | 有一张二维码图片要解内容 |
+
+### encscan.py · 编码识别器
+
+```bat
+python -X utf8 encscan.py "ZmxhZ3t0ZXN0fQ=="
+```
+
+- 自动列出可能的编码并给出置信度，再尝试逐层解码直到出现可读文本
+- 用 `--chain` 强制多层剥离，用 `--top` 控制显示几个候选
+- 认不出来时会明说「不确定」，不会硬猜一个错答案
+
+### bases.py · Base 系列互转
+
+```bat
+python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9
+python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9 -d base64
+python -X utf8 bases.py --encode base64 flag{test}
+```
+
+- 支持 Base16/32/58/64/85/91/100
+- 自动识别给的是**置信度**，不是断言；Base32 和 Base58 的字符集有重叠，短密文会歧义
+- 变种题用 `--alphabet` 传自定义字母表
+
+### xor.py · XOR 分析与破解
+
+```bat
+python -X utf8 xor.py 3c363b3d21223528 --hex
+python -X utf8 xor.py 密文.hex --hex --keylen 3
+python -X utf8 xor.py 密文.hex --hex --key KEY
+```
+
+- 单字节 0x00-0xFF 全爆破，按明文可读性排序
+- 多字节用汉明距离猜长度 + 整段爬山恢复密钥
+- 已知明文（如开头是 `flag{`）时用 `--known-plaintext` 反推，这是短密文唯一可靠的办法
+
+### hashcrack.py · 哈希识别与爆破
+
+```bat
+python -X utf8 hashcrack.py 5f4dcc3b5aa765d61d8327deb882cf99
+python -X utf8 hashcrack.py <hash> --builtin
+python -X utf8 hashcrack.py <hash> --mask "flag{?l?l?d?d}"
+```
+
+- 先按长度和格式特征识别算法，再离线撞
+- 内置约 300 条弱口令，也支持外部字典和掩码
+- bcrypt / Argon2 / *-crypt 只识别不爆破（它们是故意设计成慢的）
+
+### qrcode.py · 二维码识别
+
+```bat
+python -X utf8 qrcode.py 题目.png
+python -X utf8 qrcode.py 反色.png --invert
+```
+
+- 纯标准库实现，不依赖 zbar/opencv
+- 支持 PNG/BMP，含 RGB 和调色板 PNG（不支持 JPG）
+- 只做解码，不生成二维码
+- 解码失败会说明原因（找不到定位图案 / 纠错失败 / 比特流不足）
+
 ## 常见陷阱
 
 1. **Base64 的 `=` 不一定在结尾**：URL-safe Base64 用 `-_` 替代 `+/`，CyberChef 选 `From Base64` 时注意勾 `Alphabet`。
@@ -123,6 +195,10 @@ CTF 常把 3~5 层编码串起来。**不要凭感觉猜顺序**，按这个流�
 3. **凯撒不知道位移多少**：直接用 `ROT13 Brute Force`，输出里挑可读的那条。
 4. **多层编码不要跳步**：每解一层看一眼输出，跳步容易把中间结果当成最终答案。
 5. **中文乱码先试 GBK**：CyberChef 的 `Decode text` 操作里可切字符集。
+6. **短密文的 XOR 别指望自动解**：密钥长 3、密文只有 24 字节时，每列只有 8 个字节，
+   逐列统计里正确密钥字节连前 5 名都排不进。这种题必须用 `--known-plaintext` 或 `--keylen` 辅助。
+7. **哈希长度不等于算法**：32 位 hex 可能是 MD5、NTLM 或 MD4，64 位可能是 SHA256、SHA3-256
+   或 Keccak-256。撞不出来时换个 `--algo` 再试，别断定工具坏了。
 
 ## 下一步
 
@@ -134,6 +210,12 @@ CTF 常把 3~5 层编码串起来。**不要凭感觉猜顺序**，按这个流�
 | 工具 | 版本 | 一句话说明 |
 | --- | --- | --- |
 | [CyberChef](#cyberchef) | 11.5.0 | 「网络瑞士军刀」：300+ 操作，离线单页，Magic 自动识别编码并链式解码。 |
+| [encscan](#encscan) | 1.0 | 编码识别器，猜编码并自动剥多层。 |
+| [bases](#bases) | 1.0 | Base16/32/58/64/85/91/100 互转与识别。 |
+| [xor](#xor) | 1.0 | XOR 单字节爆破与多字节密钥恢复。 |
+| [hashcrack](#hashcrack) | 1.0 | 哈希识别与离线爆破（弱口令/字典/掩码）。 |
+| [qrcode](#qrcode) | 1.0 | 纯标准库二维码解码器（只解不生成）。 |
+
 
 ---
 
@@ -180,6 +262,213 @@ Magic（自动识别） / From Charcode / URL Decode / From HTML Entity
 - 离线版不会自动更新，需要新版本时重新下载替换
 - 显示层压缩（.br/.gz）文件可忽略，浏览器会直接读未压缩版
 - 极大数据（>1MiB）会转为文件下载形式展示
+
+---
+
+<a id="encscan"></a>
+
+## encscan · 编码识别器
+
+**类型**：script  
+**位置**：`02-编码识别/scripts/encscan.py`
+
+> 猜一串字符用的是什么编码，并尝试逐层解码直到出现可读文本。
+
+### 什么时候用
+
+题目直接给了一串字符串（不是文件），不知道是什么编码，又懒得开 CyberChef。
+
+### 怎么用
+
+```bat
+python -X utf8 encscan.py "ZmxhZ3t0ZXN0fQ=="
+python -X utf8 encscan.py -f 密文.txt --chain
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--chain` | 强制逐层剥离，直到解不动为止 |
+| `--top` | 显示前 N 个候选，默认 5 |
+| `-f` | 从文件读输入 |
+
+### 踩坑提醒
+
+- 置信度低时（< 0.5）说明这串字符太短或有歧义，看第二名
+- 它是「识别 + 试探解码」，不是密码分析；真正的加密它认不出来
+
+---
+
+<a id="bases"></a>
+
+## bases · Base 系列编解码
+
+**类型**：script  
+**位置**：`02-编码识别/scripts/bases.py`
+
+> Base16/32/58/64/85/91/100 一键互转，还能自动识别是哪种 Base。
+
+### 什么时候用
+
+明确知道是 Base 家族，要精确解码或编码；或者变种题要传自定义字母表。
+
+### 怎么用
+
+```bat
+python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9
+python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9 -d base64
+python -X utf8 bases.py --encode base32 flag{test}
+python -X utf8 bases.py 密文 -d base64 --alphabet "自定义表"
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-d / --decode` | 指定解码方式 |
+| `--encode` | 编码，后面跟方式名 |
+| `--alphabet` | 自定义字母表（变种题必用） |
+| `-f / -o` | 文件输入 / 输出 |
+| `--all` | 把所有能解的 Base 都解一遍 |
+
+### 踩坑提醒
+
+- Base32（A-Z2-7）和 Base58 字符集有重叠，短密文两个都像
+- Base100 用 emoji 编码，粘贴时被聊天软件吃掉字符就解不出来，用文件传
+- 解出二进制时用 `-o` 存文件，再用 `filetype.py` 看真实类型
+
+---
+
+<a id="xor"></a>
+
+## xor · XOR 分析与破解
+
+**类型**：script  
+**位置**：`02-编码识别/scripts/xor.py`
+
+> 单字节爆破、多字节密钥恢复、已知明文攻击，自动判断明文可读性。
+
+### 什么时候用
+
+拿到一段二进制或 hex，怀疑是 XOR（可打印率不低但读不通、高频字节重复出现）。
+
+### 怎么用
+
+```bat
+python -X utf8 xor.py 3c363b3d21223528 --hex
+python -X utf8 xor.py 密文.hex --hex --keylen 3
+python -X utf8 xor.py 密文.hex --hex --key KEY
+python -X utf8 xor.py 密文.hex --hex --known-plaintext "flag{"
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--hex` | 输入按十六进制解析 |
+| `-f / --file` | 从文件读二进制 |
+| `--key` | 直接用这个密钥解密 |
+| `--keylen` | 指定密钥长度 |
+| `--known-plaintext` | 已知明文片段，反推密钥 |
+| `--top` | 单字节爆破显示前 N 个 |
+
+### 踩坑提醒
+
+- **短密文的多字节恢复不可靠**，这是数学限制：密钥长 3、密文 24 字节时每列只有 8 个字节，
+  正确密钥字节连前 5 名都排不进。脚本靠「假设明文以 flag{ 开头」才救得回来。
+- 明文不是 flag{} 开头时，短密文请手动用 `--keylen` + `--known-plaintext`
+- 长密钥（如 12）常是过度拟合，脚本会做奥卡姆剃刀约简，但只在密钥严格周期重复时生效
+- 明文是纯二进制（图片/压缩片段）时所有候选分数都低，别信排序，改用已知明文攻击
+
+---
+
+<a id="hashcrack"></a>
+
+## hashcrack · 哈希识别与爆破
+
+**类型**：script  
+**位置**：`02-编码识别/scripts/hashcrack.py`
+
+> 先认出哈希是什么算法，再用弱口令表/字典/掩码撞出来，全程离线。
+
+### 什么时候用
+
+题目给一串 32/40/64/128 位 hex 要还原明文；或拿到 shadow、SAM 里的哈希要撞密码。
+
+### 怎么用
+
+```bat
+python -X utf8 hashcrack.py 5f4dcc3b5aa765d61d8327deb882cf99
+python -X utf8 hashcrack.py <hash> --builtin
+python -X utf8 hashcrack.py <hash> -w rockyou.txt
+python -X utf8 hashcrack.py <hash> --mask "flag{?l?l?d?d}"
+python -X utf8 hashcrack.py --list-algos
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--builtin` | 内置弱口令表（约 300 条） |
+| `-w / --wordlist` | 外部字典 |
+| `--mask` | 掩码穷举：`?l` 小写 `?u` 大写 `?d` 数字 `?a` 全部 |
+| `--algo` | 只按指定算法试 |
+| `--limit` | 字典最多试 N 条 |
+| `--identify` | 只识别不爆破 |
+
+### 踩坑提醒
+
+- 掩码组合数上限 500 万，超过直接拒绝；`?a?a?a?a?a` 就有 9.1 亿，别写长了
+- bcrypt / Argon2 / *-crypt / PBKDF2 / SSHA 只识别不爆破（它们是故意慢的），
+  这类请用 hashcat/john 配 GPU
+- 32 位 hex 无法只凭长度区分 MD5/NTLM/MD4，脚本默认三个都试
+- NTLM 需要 MD4，标准库没有，脚本自带纯 Python 实现（已用 RFC 1320 向量验证），
+  但比 hashlib 慢很多，字典超 10 万条会明显变慢
+
+---
+
+<a id="qrcode"></a>
+
+## qrcode · 二维码识别
+
+**类型**：script  
+**位置**：`02-编码识别/scripts/qrcode.py`
+
+> 纯标准库的二维码解码器，不依赖 zbar/opencv，能从 PNG/BMP 里解出内容。
+
+### 什么时候用
+
+题目给了一张二维码图片要解内容，但环境里没装扫码库；或者要确认二维码里到底藏了什么。
+
+### 怎么用
+
+```bat
+python -X utf8 qrcode.py 题目.png
+python -X utf8 qrcode.py 反色.png --invert
+python -X utf8 qrcode.py 模糊.png --threshold 128
+python -X utf8 qrcode.py 题目.png --hex
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `file` | PNG 或 BMP 图片路径（位置参数） |
+| `--dump` | 打印二值化后的模块矩阵，用于确认采样有没有错位 |
+| `--invert` | 强制反色，处理黑底白码的图 |
+| `--threshold` | 手动二值化阈值 0-255，默认自动 |
+| `--hex` | 打印原始数据码字，用于判断纠错是否失败 |
+
+### 踩坑提醒
+
+- **本工具只做解码，不生成二维码。** 要生成请用 CyberChef 的 Generate QR Code 操作
+- 容量有硬上限：版本 1-L 字节模式只能放 17 字节。18 字节的内容报
+  「比特流不足（需要 8 位，剩余 4 位）」不是 bug，是内容超了版本 1 的容量
+- 只支持 PNG 和 BMP，**不接受 JPG**（有损压缩会破坏模块边界，先转 PNG）
+- 手机拍的、有透视变形或反光的照片大概率解不出来，先裁正放大
+- 彩色二维码支持，但要求对比明显；低对比度会二值化失败
+- 调色板 PNG 里有透明色时，透明区会被当背景，可能吃掉部分模块
 
 ---
 

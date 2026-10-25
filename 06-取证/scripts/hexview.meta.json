@@ -1,0 +1,49 @@
+{
+  "id": "hexview",
+  "category": "forensics",
+  "name": "十六进制查看器",
+  "name_en": "hexview.py",
+  "summary": "看字节、跳偏移、搜十六进制/文本，带 ASCII 侧栏。",
+  "when": "要确认某个偏移是什么、搜 flag 在哪、改文件头前先看一眼。",
+  "usage": [
+    {
+      "title": "看开头",
+      "code": "python -X utf8 hexview.py 文件.bin"
+    },
+    {
+      "title": "跳偏移看一段",
+      "code": "python -X utf8 hexview.py 文件.bin -o 0x100 -n 512"
+    },
+    {
+      "title": "搜字节/文本",
+      "code": "python -X utf8 hexview.py 文件.bin -s 504b0304"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-o",
+      "desc": "起始偏移（支持 0x100）"
+    },
+    {
+      "flag": "-n",
+      "desc": "显示字节数（默认 256）"
+    },
+    {
+      "flag": "-s",
+      "desc": "搜索十六进制字节串"
+    },
+    {
+      "flag": "-t",
+      "desc": "搜索文本（UTF-8 与 UTF-16LE 都试）"
+    }
+  ],
+  "pitfalls": [
+    "只读，不能改字节（改字节请用专门的编辑器）",
+    "超大文件搜索会全量读入内存"
+  ],
+  "next": [
+    "exiftool",
+    "strings",
+    "cyberchef"
+  ]
+}

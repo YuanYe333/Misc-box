@@ -1,0 +1,38 @@
+{
+  "id": "fakeenc",
+  "category": "archive",
+  "name": "伪加密判定",
+  "name_en": "fakeenc.py",
+  "summary": "判定 ZIP/RAR 是不是伪加密，ZIP 可一键清标志位直接解压。",
+  "when": "压缩包要密码，但怀疑只是标志位被改（CTF 十次有八次是假的）。",
+  "usage": [
+    {
+      "title": "先判定",
+      "code": "python -X utf8 fakeenc.py 可疑.zip"
+    },
+    {
+      "title": "清除伪加密",
+      "code": "python -X utf8 fakeenc.py 可疑.zip -o 明文.zip"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-o",
+      "desc": "清除伪加密后另存（仅 ZIP）"
+    },
+    {
+      "flag": "--force",
+      "desc": "允许覆盖已存在的输出文件"
+    }
+  ],
+  "pitfalls": [
+    "真加密（数据区确实是密文）无法破解，只报告",
+    "ZIP 的 AES 加密（method 99）不处理",
+    "RAR 只做检测不做修复（改了容易彻底坏掉）"
+  ],
+  "next": [
+    "archpr",
+    "john",
+    "hashcat"
+  ]
+}

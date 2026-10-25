@@ -69,6 +69,63 @@
   ],
   "tools": [
     {
+      "id": "java-runtime",
+      "category": "env",
+      "name": "Java 运行时",
+      "name_en": "OpenJDK",
+      "version": "17",
+      "type": "runtime",
+      "path": "C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/java.exe",
+      "launch": {
+        "kind": "none"
+      },
+      "summary": "StegSolve、部分 JAR 版工具的依赖。",
+      "when": "StegSolve 双击无反应，或提示找不到 java 时。",
+      "usage": [
+        {
+          "title": "验证",
+          "code": "java -version"
+        }
+      ],
+      "params": [],
+      "pitfalls": [
+        "StegSolve 需要 Java 8+，本机 17 可用"
+      ],
+      "next": [
+        "stegsolve"
+      ]
+    },
+    {
+      "id": "python-runtime",
+      "category": "env",
+      "name": "Python 运行时",
+      "name_en": "Python",
+      "version": "3.14.8 / 3.12.10",
+      "type": "runtime",
+      "path": "%LOCALAPPDATA%/Python/pythoncore-3.14-64/python.exe",
+      "launch": {
+        "kind": "none"
+      },
+      "summary": "工具箱内自研脚本与 Python 系工具的基础运行时，两个版本并存。",
+      "when": "运行 _脚本/imgsize.py、CyberChef 之外的本地 Python 工具时。",
+      "usage": [
+        {
+          "title": "3.14（主运行时，含 Pillow）",
+          "code": "$env:LOCALAPPDATA\\Python\\pythoncore-3.14-64\\python.exe -X utf8 脚本.py"
+        },
+        {
+          "title": "3.12（供 binwalk/volatility3/theHarvester 虚拟环境）",
+          "code": "C:\\Python312\\python.exe -V"
+        }
+      ],
+      "params": [],
+      "pitfalls": [
+        "调用 Python 脚本务必加 -X utf8，否则中文路径与中文输出会乱码",
+        "不要把 binwalk 装进系统 Python，它有自己的独立虚拟环境"
+      ],
+      "next": []
+    },
+    {
       "id": "setup",
       "category": "env",
       "name": "环境自检",
@@ -123,60 +180,1037 @@
       ]
     },
     {
-      "id": "python-runtime",
-      "category": "env",
-      "name": "Python 运行时",
-      "name_en": "Python",
-      "version": "3.14.8 / 3.12.10",
-      "type": "runtime",
-      "path": "%LOCALAPPDATA%/Python/pythoncore-3.14-64/python.exe",
+      "id": "bases",
+      "category": "code",
+      "name": "Base 系列编解码",
+      "name_en": "bases.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "02-编码识别/scripts/bases.py",
       "launch": {
-        "kind": "none"
+        "kind": "script",
+        "target": "02-编码识别/scripts/bases.bat"
       },
-      "summary": "工具箱内自研脚本与 Python 系工具的基础运行时，两个版本并存。",
-      "when": "运行 _脚本/imgsize.py、CyberChef 之外的本地 Python 工具时。",
+      "summary": "Base16/32/58/64/85/91/100 一键互转，还能自动识别一串密文是哪种 Base。",
+      "when": "看到一串只有字母数字的密文（尤其以 = 结尾、或只有 0-9a-zA-Z 没有 +/），不知道是哪种 Base，或者要批量解码。",
       "usage": [
         {
-          "title": "3.14（主运行时，含 Pillow）",
-          "code": "$env:LOCALAPPDATA\\Python\\pythoncore-3.14-64\\python.exe -X utf8 脚本.py"
+          "title": "先让脚本自己认",
+          "steps": [
+            "python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9",
+            "脚本会列出每种 Base 的置信度，排第一的就是最可能的",
+            "置信度不是 1.0 时说明有歧义（比如 Base32 和 Base58 的字符集有重叠），看第二名"
+          ]
         },
         {
-          "title": "3.12（供 binwalk/volatility3/theHarvester 虚拟环境）",
-          "code": "C:\\Python312\\python.exe -V"
-        }
-      ],
-      "params": [],
-      "pitfalls": [
-        "调用 Python 脚本务必加 -X utf8，否则中文路径与中文输出会乱码",
-        "不要把 binwalk 装进系统 Python，它有自己的独立虚拟环境"
-      ],
-      "next": []
-    },
-    {
-      "id": "java-runtime",
-      "category": "env",
-      "name": "Java 运行时",
-      "name_en": "OpenJDK",
-      "version": "17",
-      "type": "runtime",
-      "path": "C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/java.exe",
-      "launch": {
-        "kind": "none"
-      },
-      "summary": "StegSolve、部分 JAR 版工具的依赖。",
-      "when": "StegSolve 双击无反应，或提示找不到 java 时。",
-      "usage": [
+          "title": "确认了就指定解码",
+          "code": "python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9 -d base64"
+        },
         {
-          "title": "验证",
-          "code": "java -version"
+          "title": "编码",
+          "code": "python -X utf8 bases.py --encode base64 flag{test}"
+        },
+        {
+          "title": "处理文件",
+          "code": "python -X utf8 bases.py -f 密文.txt -d base32 -o 明文.bin"
+        },
+        {
+          "title": "换自定义字母表（Base64 变种题）",
+          "steps": [
+            "python -X utf8 bases.py 密文 -d base64 --alphabet 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'",
+            "标准表是 A-Za-z0-9+/，题目常把表打乱，用 --alphabet 传入题目给的表"
+          ]
         }
       ],
-      "params": [],
+      "params": [
+        {
+          "flag": "-d / --decode",
+          "desc": "指定解码方式：base16/base32/base58/base64/base85/base91/base100"
+        },
+        {
+          "flag": "--encode",
+          "desc": "编码，后面跟方式名"
+        },
+        {
+          "flag": "--alphabet",
+          "desc": "自定义字母表（变种题必用）"
+        },
+        {
+          "flag": "-f / --file",
+          "desc": "从文件读输入"
+        },
+        {
+          "flag": "-o / --output",
+          "desc": "写到文件"
+        },
+        {
+          "flag": "--all",
+          "desc": "把所有能解的 Base 都解一遍"
+        }
+      ],
       "pitfalls": [
-        "StegSolve 需要 Java 8+，本机 17 可用"
+        "自动识别只是给置信度，不是断言。Base32（A-Z2-7）和 Base58（去掉 0OIl）字符集有重叠，短密文经常两个都像；Base64 和 Base58 也是。密文越长越准，几个字符的别信排序。",
+        "Base64 的 = 补位会被脚本容忍（自动补齐），但 Base32 的补位规则不同，解出来长度不对时先检查是不是漏了 =。",
+        "Base91 和 Base100 不是标准库的，是脚本自己实现的。Base100 用 emoji 编码，粘贴时如果被聊天软件吃掉字符会直接解不出来——遇到 emoji 题先用文件传，别复制粘贴。",
+        "解码结果是二进制时脚本会提示「不是文本」，这时候要用 -o 存成文件再用 filetype.py 看真实类型，别当文本硬看。"
       ],
       "next": [
-        "stegsolve"
+        "encscan",
+        "filetype",
+        "xor"
+      ]
+    },
+    {
+      "id": "cyberchef",
+      "category": "code",
+      "name": "CyberChef",
+      "name_en": "CyberChef",
+      "version": "11.5.0",
+      "type": "web",
+      "path": "02-编码识别/CyberChef/CyberChef_v11.5.0.html",
+      "launch": {
+        "kind": "html",
+        "target": "02-编码识别/CyberChef/CyberChef_v11.5.0.html"
+      },
+      "summary": "「网络瑞士军刀」：300+ 操作，离线单页，Magic 自动识别编码并链式解码。",
+      "when": "一堆乱码不知道是什么编码、需要多层解码、或做 Base/XX/摩斯/培根/凯撒等变换时，第一个打开它。",
+      "usage": [
+        {
+          "title": "图形方式",
+          "steps": [
+            "双击卡片「打开工具」→ 浏览器载入本地页面",
+            "左侧输入乱码 → 点「Magic」或从 Operations 搜操作名",
+            "右侧 Output 实时出结果；可用「Bake」逐步调试"
+          ]
+        },
+        {
+          "title": "常用操作名（搜索框直接输入）",
+          "code": "From Base64 / From Base32 / From Base58 / From Hex\nFrom Morse Code / ROT13 / Atbash Cipher / Bacon Cipher Decode\nMagic（自动识别） / From Charcode / URL Decode / From HTML Entity"
+        }
+      ],
+      "params": [
+        {
+          "flag": "Magic",
+          "desc": "自动推测编码并给出候选操作，最省事"
+        },
+        {
+          "flag": "Recipe",
+          "desc": "把多个操作串成流水线，一次跑完多层解码"
+        },
+        {
+          "flag": "Fork",
+          "desc": "对多行输入分别执行后续操作"
+        }
+      ],
+      "pitfalls": [
+        "离线版不会自动更新，需要新版本时重新下载替换",
+        "显示层压缩（.br/.gz）文件可忽略，浏览器会直接读未压缩版",
+        "极大数据（>1MiB）会转为文件下载形式展示"
+      ],
+      "next": [
+        "imgsize"
+      ]
+    },
+    {
+      "id": "encscan",
+      "category": "code",
+      "name": "编码识别器",
+      "name_en": "encscan.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "02-编码识别/scripts/encscan.py",
+      "launch": {
+        "kind": "script",
+        "target": "02-编码识别/scripts/encscan.bat"
+      },
+      "summary": "扔一串看不懂的字符，列出最可能的编码并自动多层链式解码。",
+      "when": "拿到一串 base64/hex/摩斯/凯撒样式的字符串，不确定是什么编码时。",
+      "usage": [
+        {
+          "title": "直接给字符串",
+          "code": "python -X utf8 encscan.py \"SGVsbG8=\""
+        },
+        {
+          "title": "从文件读",
+          "code": "python -X utf8 encscan.py -f 密文.txt"
+        },
+        {
+          "title": "只看链式解码",
+          "code": "python -X utf8 encscan.py --deep \"5L2g5aW9\""
+        }
+      ],
+      "params": [
+        {
+          "flag": "-f",
+          "desc": "从文件读取（自动去掉 BOM）"
+        },
+        {
+          "flag": "--deep",
+          "desc": "只做多层链式解码"
+        },
+        {
+          "flag": "--top N",
+          "desc": "显示前 N 个候选（默认 5）"
+        }
+      ],
+      "pitfalls": [
+        "凯撒/栅栏这类靠自然语言判断的只能给候选，不能保证对",
+        "摩斯码依赖分隔符，点划被改写就认不出",
+        "文件带 BOM 会让 base64/hex 的字符集判定直接失败（脚本已自动剥掉）"
+      ],
+      "next": [
+        "cyberchef",
+        "bases",
+        "xor"
+      ]
+    },
+    {
+      "id": "hashcrack",
+      "category": "code",
+      "name": "哈希识别与爆破",
+      "name_en": "hashcrack.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "02-编码识别/scripts/hashcrack.py",
+      "launch": {
+        "kind": "script",
+        "target": "02-编码识别/scripts/hashcrack.bat"
+      },
+      "summary": "先认出这串哈希是什么算法，再用内置弱口令表/字典/掩码把它撞出来，全程离线。",
+      "when": "题目给了一串 32/40/64/128 位十六进制要还原明文；或者拿到 /etc/shadow、Windows SAM 里的哈希要撞密码。",
+      "usage": [
+        {
+          "title": "先只识别",
+          "steps": [
+            "python -X utf8 hashcrack.py 5f4dcc3b5aa765d61d8327deb882cf99",
+            "脚本按长度和格式特征给出候选算法，并说明判据",
+            "长度 32 的会明确提示「无法只凭长度区分 MD5/NTLM/MD4」"
+          ]
+        },
+        {
+          "title": "用内置弱口令表撞",
+          "code": "python -X utf8 hashcrack.py 5f4dcc3b5aa765d61d8327deb882cf99 --builtin"
+        },
+        {
+          "title": "用外部字典",
+          "code": "python -X utf8 hashcrack.py <hash> -w rockyou.txt"
+        },
+        {
+          "title": "掩码穷举（知道格式）",
+          "code": "python -X utf8 hashcrack.py <hash> --mask 'flag{?l?l?d?d}'"
+        },
+        {
+          "title": "只识别不爆破 / 看支持的算法",
+          "steps": [
+            "python -X utf8 hashcrack.py <hash> --identify",
+            "python -X utf8 hashcrack.py --list-algos"
+          ]
+        }
+      ],
+      "params": [
+        {
+          "flag": "--builtin",
+          "desc": "用内置弱口令表（约 300 条常用口令，含 flag/ctf/key 一类）"
+        },
+        {
+          "flag": "-w / --wordlist",
+          "desc": "外部字典文件，每行一个候选"
+        },
+        {
+          "flag": "--mask",
+          "desc": "掩码穷举：?l 小写 ?u 大写 ?d 数字 ?s 符号 ?a 全部 ?b 小写+数字 ?h 小写hex ?H 大写hex ?x 混合hex"
+        },
+        {
+          "flag": "--algo",
+          "desc": "只按指定算法试"
+        },
+        {
+          "flag": "--limit",
+          "desc": "字典最多试 N 条"
+        },
+        {
+          "flag": "--identify",
+          "desc": "只识别不爆破"
+        },
+        {
+          "flag": "--list-algos",
+          "desc": "列出支持的算法"
+        },
+        {
+          "flag": "--quiet",
+          "desc": "只输出结果"
+        }
+      ],
+      "pitfalls": [
+        "掩码组合数上限 500 万，超过直接拒绝。?a 是 62 个字符，?a?a?a?a?a 就有 9.1 亿，别手滑写长了——先算组合数再跑。",
+        "bcrypt / Argon2 / MD5-crypt / SHA256-crypt / SHA512-crypt / PBKDF2 / SSHA 只做识别，不爆破。这些是故意设计成慢哈希的，纯 Python 撞一条要几百毫秒，跑字典等于等一天；请用 hashcat / john 配 GPU。",
+        "32 位十六进制无法只凭长度区分 MD5 / NTLM / MD4，脚本默认三个都试。如果三个都撞不出来，可能是带盐的 MD5（md5($salt.$pass)），本工具不处理带盐格式。",
+        "NTLM 是 MD4(UTF-16LE(密码))，标准库没有 MD4，脚本自带了一份纯 Python 实现（已用 RFC 1320 的 6 个标准向量验证）。但纯 Python MD4 比 hashlib 慢很多，字典超过 10 万条时会明显变慢。",
+        "内置弱口令表是「小而精」，只有约 300 条，覆盖的是 CTF 最常见的弱口令。真实场景请用 rockyou.txt（1400 万条），但纯 Python 跑完要很久。",
+        "识别只是候选，不是断言。看到 SHA256 也可能是 SHA3-256 或 Keccak-256——三者对同一输入输出不同，撞不出来时用 --algo 换一个再试。"
+      ],
+      "next": [
+        "encscan",
+        "strings",
+        "john"
+      ]
+    },
+    {
+      "id": "qrcode",
+      "category": "code",
+      "name": "二维码识别",
+      "name_en": "qrcode.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "02-编码识别/scripts/qrcode.py",
+      "launch": {
+        "kind": "script",
+        "target": "02-编码识别/scripts/qrcode.bat"
+      },
+      "summary": "纯标准库的二维码解码器，不依赖 zbar/opencv，能从 PNG/BMP 里解出内容。",
+      "when": "题目给了一张二维码图片要解内容，但环境里没装扫码库；或者要确认二维码里到底藏了什么（含原始码字）。",
+      "usage": [
+        {
+          "title": "解一张二维码图片",
+          "steps": [
+            "python -X utf8 qrcode.py 题目.png",
+            "会打印定位图案、版本、纠错级别、掩码编号，最后给出解出的内容",
+            "PNG 和 BMP 都支持，含 RGB/RGBA 和调色板 PNG"
+          ]
+        },
+        {
+          "title": "黑底白码（反色图）",
+          "code": "python -X utf8 qrcode.py 反色.png --invert"
+        },
+        {
+          "title": "二值化阈值不对时手动指定",
+          "code": "python -X utf8 qrcode.py 模糊.png --threshold 128"
+        },
+        {
+          "title": "看原始码字（调试纠错问题）",
+          "code": "python -X utf8 qrcode.py 题目.png --hex"
+        },
+        {
+          "title": "打印模块矩阵（确认采样是否正确）",
+          "code": "python -X utf8 qrcode.py 题目.png --dump"
+        }
+      ],
+      "params": [
+        {
+          "flag": "file",
+          "desc": "PNG 或 BMP 图片路径（位置参数）"
+        },
+        {
+          "flag": "--dump",
+          "desc": "打印二值化后的模块矩阵，用于确认采样有没有错位"
+        },
+        {
+          "flag": "--invert",
+          "desc": "强制反色，处理黑底白码的图"
+        },
+        {
+          "flag": "--threshold",
+          "desc": "手动二值化阈值 0-255，默认自动"
+        },
+        {
+          "flag": "--hex",
+          "desc": "打印原始数据码字，用于判断纠错是否失败"
+        }
+      ],
+      "pitfalls": [
+        "本工具只做解码，不生成二维码。要生成请用 CyberChef 的 Generate QR Code 操作或在线工具。",
+        "容量有硬上限：版本 1-L 的字节模式只能放 17 字节。内容超了会报「比特流不足（需要 8 位，剩余 4 位）」，这不是 bug——这个报错说明定位、版本、纠错级别都解对了，只是内容长度超出了该版本容量，出题人用了更大版本或更高级别。",
+        "解码依赖图片清晰。手机拍的、有透视变形或反光的照片大概率解不出来，先裁正放大；实在不行用手机扫码器转成文本。",
+        "彩色二维码（RGB/RGBA）支持，但要求前景背景对比明显，低对比度会二值化失败。",
+        "调色板 PNG（colortype 3）支持，但调色板里的透明色会被当背景，可能吃掉部分模块。",
+        "只支持 PNG 和 BMP，不接受 JPG。JPG 有损压缩会破坏模块边界，请先转成 PNG。"
+      ],
+      "next": [
+        "imgsize",
+        "stegodetect",
+        "bases"
+      ]
+    },
+    {
+      "id": "xor",
+      "category": "code",
+      "name": "XOR 分析与破解",
+      "name_en": "xor.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "02-编码识别/scripts/xor.py",
+      "launch": {
+        "kind": "script",
+        "target": "02-编码识别/scripts/xor.bat"
+      },
+      "summary": "单字节爆破、多字节密钥恢复、已知明文攻击，用词表和 flag{} 结构自动判断明文。",
+      "when": "拿到一段二进制或 hex，怀疑是 XOR 加密（特征：可打印率不低但读不通、高频字节重复出现），要恢复明文或密钥。",
+      "usage": [
+        {
+          "title": "直接丢进去，让它自己判断",
+          "steps": [
+            "python -X utf8 xor.py 3c363b3d21223528 --hex",
+            "先做单字节 0x00-0xFF 全爆破，按明文可读性排序",
+            "如果单字节就解出完整 flag{...}，直接收尾；否则继续推测多字节密钥长度"
+          ]
+        },
+        {
+          "title": "已知密钥长度",
+          "code": "python -X utf8 xor.py 密文.hex --hex --keylen 3"
+        },
+        {
+          "title": "已知密钥直接解",
+          "code": "python -X utf8 xor.py 密文.hex --hex --key KEY"
+        },
+        {
+          "title": "已知明文攻击（知道开头是 flag{）",
+          "code": "python -X utf8 xor.py 密文.hex --hex --known-plaintext 'flag{'"
+        },
+        {
+          "title": "从文件读",
+          "code": "python -X utf8 xor.py -f 密文.bin --keylen 8"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--hex",
+          "desc": "输入按十六进制解析（允许空格、0x、\\x 分隔）"
+        },
+        {
+          "flag": "-f / --file",
+          "desc": "从文件读二进制输入"
+        },
+        {
+          "flag": "--key",
+          "desc": "直接用这个密钥解密"
+        },
+        {
+          "flag": "--keylen",
+          "desc": "指定密钥长度，跳过自动推测"
+        },
+        {
+          "flag": "--known-plaintext",
+          "desc": "已知明文片段，反推密钥"
+        },
+        {
+          "flag": "--top",
+          "desc": "单字节爆破显示前 N 个，默认 10"
+        },
+        {
+          "flag": "--raw",
+          "desc": "输出原始字节，不做可打印过滤"
+        }
+      ],
+      "pitfalls": [
+        "短密文的多字节密钥恢复不可靠，这是数学限制不是 bug。密钥长 3、密文只有 24 字节时，每列只有 8 个字节，逐列统计里正确密钥字节连前 5 名都排不进（实测 0x4B/0x45/0x59 全部落榜）。脚本靠「假设明文以 flag{ 开头」反推种子才救得回来——所以如果明文不是 flag{} 开头，短密文很可能解不出，请手动用 --keylen 配合 --known-plaintext。",
+        "自动推测的「最可能」不是保证。脚本会同时列出前几名，如果第一名的明文读着别扭、第二名反而通顺，就用 --keylen 指定长度重跑。",
+        "长度 12 之类的长密钥经常是过度拟合：它用更长的周期去拟合同一段明文，分数可能只比真密钥低 0.1。脚本会做奥卡姆剃刀约简（能约成更短周期且解密结果不变就用短的），但约简只在密钥严格周期重复时生效。",
+        "打分器认的是英文和 UTF-8/GBK 中文。如果明文是纯二进制（图片、压缩包片段），所有候选分数都会很低，这时候别信排序，改用已知明文攻击。",
+        "gb18030 能把几乎任意二进制解成一串汉字，所以中文打分器加了「常用字占比」判据（GB2312 一级字库）。生僻字多的结果会被判成噪声——这是故意的，否则随机数据会拿到高分。"
+      ],
+      "next": [
+        "encscan",
+        "bases",
+        "filetype"
+      ]
+    },
+    {
+      "id": "audiospec",
+      "category": "stego",
+      "name": "音频波形/频谱图",
+      "name_en": "audiospec.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "03-隐写/scripts/audiospec.py",
+      "launch": {
+        "kind": "script",
+        "target": "03-隐写/scripts/audiospec.bat"
+      },
+      "summary": "把 WAV 画成波形图和频谱图，纯标准库自带 FFT，专门用来看频谱藏字。",
+      "when": "题目给了音频文件（尤其 .wav），怀疑有频谱藏字或者要听/看静音段藏的摩斯码。",
+      "usage": [
+        {
+          "title": "直接出两张图",
+          "steps": [
+            "python -X utf8 audiospec.py 题目.wav",
+            "会生成 题目_wave.png（波形）和 题目_spec.png（频谱）",
+            "先看频谱图：如果有规则的笔画或方块，就是藏字"
+          ]
+        },
+        {
+          "title": "高频区放大看",
+          "steps": [
+            "python -X utf8 audiospec.py 题目.wav --spec --fmin 8000 --fmax 16000 --width 1600 --height 600",
+            "藏字常写在 8k-16k 这段人耳不敏感的区间，裁掉低频后笔画会清楚很多",
+            "还是看不清就把 --range-db 调小（比如 40），弱信号会更亮"
+          ]
+        },
+        {
+          "title": "只看某一段",
+          "code": "python -X utf8 audiospec.py 题目.wav --spec --start 2.5 --end 4.0 -o 片段.png"
+        },
+        {
+          "title": "分开看左右声道",
+          "code": "python -X utf8 audiospec.py 题目.wav --spec --channel R -o 右声道.png"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--spec",
+          "desc": "只出频谱图"
+        },
+        {
+          "flag": "--wave",
+          "desc": "只出波形图"
+        },
+        {
+          "flag": "--channel",
+          "desc": "L/R/both，默认 both（双声道会叠加成一路）"
+        },
+        {
+          "flag": "--start / --end",
+          "desc": "截取时间段（秒）"
+        },
+        {
+          "flag": "--fmin / --fmax",
+          "desc": "只显示这一段频率（Hz），藏字常在高频"
+        },
+        {
+          "flag": "--n-fft",
+          "desc": "STFT 窗长，默认 2048；调大频率分辨率高、时间分辨率低"
+        },
+        {
+          "flag": "--range-db",
+          "desc": "显示多少 dB 动态范围，默认 90；调小能突出弱信号"
+        },
+        {
+          "flag": "--gamma",
+          "desc": "亮度 gamma，默认 0.7；小于 1 提亮暗部"
+        },
+        {
+          "flag": "--width / --height",
+          "desc": "输出尺寸"
+        }
+      ],
+      "pitfalls": [
+        "只认 WAV。MP3/FLAC/OGG 会直接报「不是 WAV」，要先用 7zip 或音频工具转成 WAV，别指望脚本自动识别。",
+        "--channel both 会把左右声道平均成一路。如果出题人把字分别藏在左右两个声道（或者左右藏的是不同内容），叠加后可能互相抵消成一团糊，这种题必须用 --channel L 和 --channel R 各看一次。",
+        "频率轴默认铺满 0 到采样率一半。藏字通常只占很窄的一条，全谱显示时会被压成几个像素高的细线，一定要配合 --fmin/--fmax 放大。",
+        "纯 Python 算 FFT，长音频慢。默认 hop 是窗长的 1/4，10 分钟的音频会产生上万帧，跑之前先用 --start/--end 截一段；脚本在帧数超过 6000 时会提示。"
+      ],
+      "next": [
+        "wireshark",
+        "7zip"
+      ]
+    },
+    {
+      "id": "exiftool",
+      "category": "stego",
+      "name": "ExifTool",
+      "name_en": "ExifTool",
+      "version": "13.59",
+      "type": "cli",
+      "path": "CTF-tools/exiftool/exiftool.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "CTF-tools/exiftool"
+      },
+      "summary": "读/写图片、文档、音视频元数据：GPS、作者、注释、隐藏字段。",
+      "when": "拿到任何文件先看元数据，flag 常藏在 Comment/Artist/GPS 里。",
+      "usage": [
+        {
+          "title": "全部元数据",
+          "code": ".\\exiftool.exe 图片.png"
+        },
+        {
+          "title": "分组显示全部字段",
+          "code": ".\\exiftool.exe -a -G1 图片.png"
+        },
+        {
+          "title": "只取值（便于管道）",
+          "code": ".\\exiftool.exe -b -Comment 图片.png"
+        },
+        {
+          "title": "递归扫描目录",
+          "code": ".\\exiftool.exe -r D:\\题目\\"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-a",
+          "desc": "显示重复标签"
+        },
+        {
+          "flag": "-G1",
+          "desc": "按分组显示"
+        },
+        {
+          "flag": "-b",
+          "desc": "二进制/原始值输出"
+        },
+        {
+          "flag": "-r",
+          "desc": "递归目录"
+        }
+      ],
+      "pitfalls": [
+        "exiftool 只读文件头，报告的是被篡改后的值，不能判断真假"
+      ],
+      "next": [
+        "imgsize",
+        "binwalk"
+      ]
+    },
+    {
+      "id": "imgsize",
+      "category": "stego",
+      "name": "图片长宽校验",
+      "name_en": "imgsize.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "03-隐写/scripts/imgsize.py",
+      "launch": {
+        "kind": "script",
+        "target": "03-隐写/scripts/imgsize.bat"
+      },
+      "summary": "通过像素数据量与声明长宽对账，反推被篡改的真实宽高（PNG/BMP 严格，JPG 启发式）。",
+      "when": "图片显示异常、下半截是噪点、比例被拉伸，或怀疑 IHDR/SOF 被改过。",
+      "usage": [
+        {
+          "title": "拖拽（最省事）",
+          "steps": [
+            "把图片或文件夹拖到 03-隐写\\scripts\\imgsize.bat 上松手"
+          ]
+        },
+        {
+          "title": "命令行",
+          "code": "python -X utf8 imgsize.py 题目.png"
+        },
+        {
+          "title": "批量（递归）",
+          "code": "python -X utf8 imgsize.py 题目目录 -r"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-r",
+          "desc": "递归子目录"
+        },
+        {
+          "flag": "多路径",
+          "desc": "可一次传多个文件"
+        }
+      ],
+      "pitfalls": [
+        "必须加 -X utf8，否则中文路径乱码",
+        "pngcheck 在 CRC 被重算后完全漏检，本脚本靠数据量对账仍能发现",
+        "JPG 没有像素长度字段，只能靠底部中性灰填充带启发式判断"
+      ],
+      "next": [
+        "pngcheck",
+        "stegsolve",
+        "exiftool"
+      ]
+    },
+    {
+      "id": "lsb",
+      "category": "stego",
+      "name": "LSB 隐写提取/写入",
+      "name_en": "lsb.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "03-隐写/scripts/lsb.py",
+      "launch": {
+        "kind": "script",
+        "target": "03-隐写/scripts/lsb.bat"
+      },
+      "summary": "PNG/BMP 最低位提取与写入，自动穷举通道/位平面/位序组合并打分排序，可出位平面图。",
+      "when": "拿到一张图怀疑像素最低位藏了数据，或要把 payload 反向写进图片时。",
+      "usage": [
+        {
+          "title": "不知道参数时先自动试",
+          "steps": [
+            "python -X utf8 lsb.py 图.png",
+            "脚本会穷举 通道×位平面×位序×布局 并按「像不像明文」打分排序",
+            "看排第一的那条后面的「复现」命令，再精确提取"
+          ]
+        },
+        {
+          "title": "精确提取到文件",
+          "steps": [
+            "python -X utf8 lsb.py 图.png --channel R --bit 0 --count 200",
+            "确认读出来的东西对，再加 -o 落地：python -X utf8 lsb.py 图.png --channel R --bit 0 -o out.bin"
+          ]
+        },
+        {
+          "title": "位平面可视化",
+          "steps": [
+            "python -X utf8 lsb.py 图.png --plane 3 -o plane3.png",
+            "打开黑白图，白=该位为 1；有规则笔画就是藏了字"
+          ]
+        },
+        {
+          "title": "命令行",
+          "code": "python -X utf8 lsb.py 图.png --embed -f payload.bin -o 藏了东西.png"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--channel",
+          "desc": "R/G/B/A/all/rgba，all 只含 RGB（Stegsolve 习惯）"
+        },
+        {
+          "flag": "--bit",
+          "desc": "位平面 0-7，0 是最低位"
+        },
+        {
+          "flag": "--bit-order",
+          "desc": "lsb/msb，先读到的位放输出字节的低位还是高位"
+        },
+        {
+          "flag": "--layout",
+          "desc": "row 逐像素RGB / bgr 逐像素BGR / planar 先整张R再G再B"
+        },
+        {
+          "flag": "--count",
+          "desc": "提取多少字节，0=全部容量"
+        },
+        {
+          "flag": "--plane",
+          "desc": "输出第 N 位平面的黑白 PNG"
+        },
+        {
+          "flag": "--embed",
+          "desc": "写入模式，配 -f 或 --payload-text"
+        },
+        {
+          "flag": "--length-header",
+          "desc": "写入时加 4 字节长度头，自动模式能认出来"
+        }
+      ],
+      "pitfalls": [
+        "--channel all 只含 RGB 不含 Alpha。这是 Stegsolve 的习惯，把 A 混进来会让正常题目直接读不出来；要读 Alpha 用 --channel A 或 rgba。",
+        "PNG 只支持 8-bit 非隔行。16-bit PNG 的最低位语义和 8-bit 完全不同（一个像素 16 位），强行按 8-bit 读出来是噪声，脚本会直接报错而不是瞎猜。",
+        "调色板 PNG 会先展开成 RGBA 再取位。如果出题人是直接改调色板索引的 LSB，展开后就读不到了——这种题要先用别的方式还原索引。",
+        "自动模式只抽样前 1KB 打分。如果藏的数据在第 2KB 之后才开始，或者开头有段乱码，可能排不到第一，要看完整候选列表。"
+      ],
+      "next": [
+        "stegsolve",
+        "pngcheck",
+        "imgsize"
+      ]
+    },
+    {
+      "id": "pngcheck",
+      "category": "stego",
+      "name": "pngcheck 套件",
+      "name_en": "pngcheck / pngsplit / png-fix-IDAT",
+      "version": "3.0.3",
+      "type": "cli",
+      "path": "pngcheck/pngcheck.exe",
+      "alt_paths": [
+        "pngcheck/pngsplit.exe",
+        "pngcheck/png-fix-IDAT-windowsize.exe"
+      ],
+      "launch": {
+        "kind": "dir",
+        "target": "pngcheck"
+      },
+      "summary": "PNG 结构校验、chunk 拆分、IDAT 窗口修复；能在任意文件里搜索并提取 PNG。",
+      "when": "PNG 打不开、CRC 报错、怀疑 tEXt 藏 flag、或要从 bin 里捞图片。",
+      "usage": [
+        {
+          "title": "基本校验",
+          "code": ".\\pngcheck\\pngcheck.exe 图片.png"
+        },
+        {
+          "title": "逐 chunk 结构",
+          "code": ".\\pngcheck\\pngcheck.exe -v 图片.png"
+        },
+        {
+          "title": "看 tEXt 文本块（藏 flag 必查）",
+          "code": ".\\pngcheck\\pngcheck.exe -t 图片.png"
+        },
+        {
+          "title": "乱码时转义高位字符",
+          "code": ".\\pngcheck\\pngcheck.exe -7 图片.png"
+        },
+        {
+          "title": "调色板/透明度",
+          "code": ".\\pngcheck\\pngcheck.exe -p 图片.png"
+        },
+        {
+          "title": "只报错",
+          "code": ".\\pngcheck\\pngcheck.exe -q 图片.png"
+        },
+        {
+          "title": "在任意文件里搜 PNG",
+          "code": ".\\pngcheck\\pngcheck.exe -s 文件.bin"
+        },
+        {
+          "title": "搜索并提取",
+          "code": ".\\pngcheck\\pngcheck.exe -x 文件.bin"
+        },
+        {
+          "title": "拆 chunk",
+          "code": ".\\pngcheck\\pngsplit.exe 图片.png"
+        },
+        {
+          "title": "修 IDAT 窗口",
+          "code": ".\\pngcheck\\png-fix-IDAT-windowsize.exe 图片.png"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-v / -vv",
+          "desc": "详细结构 / 解码并打印每行 filter"
+        },
+        {
+          "flag": "-t",
+          "desc": "打印 tEXt 文本块"
+        },
+        {
+          "flag": "-7",
+          "desc": "打印 tEXt 并转义高位字符"
+        },
+        {
+          "flag": "-p",
+          "desc": "打印 PLTE 调色板与 tRNS"
+        },
+        {
+          "flag": "-q",
+          "desc": "只输出错误"
+        },
+        {
+          "flag": "-s / -x",
+          "desc": "在任意文件中搜索 / 搜索并提取"
+        }
+      ],
+      "pitfalls": [
+        "只验 CRC：改完长宽并重算 CRC 就查不出来，高度改大时甚至报 No errors detected",
+        "怀疑尺寸时务必配合 imgsize.py",
+        "参数可组合：-q -7、-v -t"
+      ],
+      "next": [
+        "imgsize",
+        "stegsolve",
+        "binwalk"
+      ]
+    },
+    {
+      "id": "stegodetect",
+      "category": "stego",
+      "name": "隐写总检",
+      "name_en": "stegodetect.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "03-隐写/scripts/stegodetect.py",
+      "launch": {
+        "kind": "script",
+        "target": "03-隐写/scripts/stegodetect.bat"
+      },
+      "summary": "一键盘查 PNG/JPEG/BMP/ZIP 的尾部附加、异常块、尺寸不符、内嵌文件和明文 flag，按可信度排序。",
+      "when": "拿到一个可疑文件但不知道该往哪个方向查，先跑这个把明显的隐写痕迹全列出来。",
+      "usage": [
+        {
+          "title": "先全检一遍",
+          "steps": [
+            "python -X utf8 stegodetect.py 题目.png",
+            "结果按 [高]/[中]/[低] 排序，先只看 [高] 那几条",
+            "如果报了「IEND 之后有附加数据」，用 --tail-dump 把那一段单独存出来再分析"
+          ]
+        },
+        {
+          "title": "两图对比找改动点",
+          "steps": [
+            "python -X utf8 stegodetect.py --diff 原图.png 改过.png -o 差异.png",
+            "差异图会把不同像素放大 32 倍并标红，改动区域一眼可见",
+            "输出里会写明最大通道差；差 1 通常就是 LSB 级改动"
+          ]
+        },
+        {
+          "title": "整目录扫一遍",
+          "code": "python -X utf8 stegodetect.py 附件目录/ -r"
+        },
+        {
+          "title": "导出尾部数据",
+          "code": "python -X utf8 stegodetect.py 题目.png --tail-dump -o tail.bin"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-r",
+          "desc": "递归子目录"
+        },
+        {
+          "flag": "--diff A B",
+          "desc": "两张同尺寸图做像素级对比，输出差异图"
+        },
+        {
+          "flag": "--tail-dump",
+          "desc": "把容器尾部（IEND/EOI 之后）的附加数据导出成文件"
+        },
+        {
+          "flag": "-o",
+          "desc": "输出文件（配合 --diff / --tail-dump）"
+        },
+        {
+          "flag": "--no-amplify",
+          "desc": "差异图不放大，只按原始差值画"
+        },
+        {
+          "flag": "-v",
+          "desc": "详细输出，含更多数据预览"
+        }
+      ],
+      "pitfalls": [
+        "「没有发现明显异常」不等于没有隐写。本脚本查的是容器层面的痕迹（尾部数据、块异常、尺寸不符、内嵌文件），LSB 隐写、频域隐写这类内容级手法不会留下任何结构痕迹，必须再用 lsb.py 或 stegsolve 看。",
+        "JPEG 天然存在多个 APP 段和 COM 段，数量多不代表有问题；脚本把 APP 段数量作为「低」优先级提示，别把它当成结论。",
+        "PNG 声明的像素数据比实际少，可能是出题人改了 IHDR 宽度或高度（常见手法），也可能只是编码器优化。判据是差值大小和尾部是否紧接数据，脚本会给出具体字节数让你自己判断。",
+        "两图对比要求尺寸完全一致。尺寸不同时脚本直接报错，因为那本身就是线索（出题人裁过图），别急着去 resize。"
+      ],
+      "next": [
+        "stegsolve",
+        "binwalk",
+        "foremost"
+      ]
+    },
+    {
+      "id": "stegsolve",
+      "category": "stego",
+      "name": "StegSolve",
+      "name_en": "StegSolve",
+      "version": "1.4",
+      "type": "gui",
+      "path": "StegSolve/StegSolve-1.4.jar",
+      "launch": {
+        "kind": "bat",
+        "target": "StegSolve/启动StegSolve.bat",
+        "workdir": "StegSolve"
+      },
+      "summary": "图片逐通道、逐位平面查看，Frame Browser 翻帧，Stereogram Solver 解立体图。",
+      "when": "图片肉眼看不出问题，怀疑低位藏数据、多帧 GIF 藏图、或需要看某个颜色通道。",
+      "usage": [
+        {
+          "title": "图形方式",
+          "steps": [
+            "双击 StegSolve/启动StegSolve.bat",
+            "File → Open 选图片",
+            "底部箭头切换通道/位平面"
+          ]
+        },
+        {
+          "title": "Frame Browser",
+          "code": "Analyse → Frame Browser（GIF 多帧逐帧看）"
+        },
+        {
+          "title": "Stereogram Solver",
+          "code": "Analyse → Stereogram Solver（立体图/随机点图）"
+        }
+      ],
+      "params": [
+        {
+          "flag": "Red/Green/Blue plane",
+          "desc": "单通道查看"
+        },
+        {
+          "flag": "Bit planes 0-7",
+          "desc": "逐位平面，低位平面常藏 LSB 数据"
+        },
+        {
+          "flag": "Frame Browser",
+          "desc": "多帧图片逐帧浏览"
+        },
+        {
+          "flag": "Stereogram Solver",
+          "desc": "解立体图"
+        }
+      ],
+      "pitfalls": [
+        "需要 Java，双击无反应先查 java -version",
+        "大图逐位平面切换较慢，耐心等"
+      ],
+      "next": [
+        "pngcheck",
+        "imgsize"
+      ]
+    },
+    {
+      "id": "zipstego",
+      "category": "stego",
+      "name": "ZIP 隐写检测",
+      "name_en": "zipstego.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "03-隐写/scripts/zipstego.py",
+      "launch": {
+        "kind": "script",
+        "target": "03-隐写/scripts/zipstego.bat"
+      },
+      "summary": "查 ZIP 伪加密、注释藏数据、EOCD 后附加数据、隐藏条目，并可一键修复伪加密。",
+      "when": "ZIP 打开要密码但题目没给，或者怀疑 ZIP 里除了看得见的文件还藏了别的东西。",
+      "usage": [
+        {
+          "title": "先体检",
+          "steps": [
+            "python -X utf8 zipstego.py 题目.zip",
+            "看到「伪加密」就直接用 --clean 修；看到「注释里内嵌 ZIP」就用 --dump-comment 取出来",
+            "结果按 [高]/[中]/[低] 排序，[高] 是确定性的"
+          ]
+        },
+        {
+          "title": "修复伪加密",
+          "steps": [
+            "python -X utf8 zipstego.py 伪加密.zip --clean -o 修好了.zip",
+            "脚本只清标志位里的 bit0，字节数不变，CRC 和压缩数据都不动",
+            "修完用 7zip 直接打开，不需要密码"
+          ]
+        },
+        {
+          "title": "导出注释",
+          "code": "python -X utf8 zipstego.py 题目.zip --dump-comment -o 注释.bin"
+        },
+        {
+          "title": "整目录扫",
+          "code": "python -X utf8 zipstego.py 附件目录/ -r"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--dump-comment",
+          "desc": "把 EOCD 注释导出成文件"
+        },
+        {
+          "flag": "--clean",
+          "desc": "修复伪加密，必须配 -o 指定输出文件名"
+        },
+        {
+          "flag": "-o",
+          "desc": "输出文件"
+        },
+        {
+          "flag": "-r",
+          "desc": "目录递归"
+        },
+        {
+          "flag": "-v",
+          "desc": "打印每个条目的 method/大小/加密状态"
+        },
+        {
+          "flag": "--force",
+          "desc": "允许覆盖已存在文件"
+        }
+      ],
+      "pitfalls": [
+        "伪加密的判定看「本地头 flags」和「中央目录 flags」是否一致。只改一处的题（本地头置位、中央目录没置位）最坑：7-Zip 看中央目录直接就能解，Windows 资源管理器却弹密码框，两边现象不一样，别以为是文件坏了。",
+        "真加密和伪加密都表现为「flags bit0 = 1」。脚本用「csize 是否比 usize 大至少 12 字节」来区分——真 ZipCrypto 会加 12 字节加密头。但如果出题人对存储方式（method=0）且内容恰好加密后长度不变做了特殊处理，这个判据会失准，此时脚本会明确说「无法确认」，不会硬改。",
+        "--clean 只动「已确认是伪加密」的条目。真加密的条目一律保留，否则会把本来能用密码解开的包改成彻底打不开。修完一定要先用 7zip 打开验证。",
+        "注释长度字段是 16 位的，最大 65535。如果注释超长被截断，EOCD 的注释长度和实际剩余字节数会对不上，脚本会报「注释长度字段与实际不符」——这本身就是一条线索，别当成文件损坏。"
+      ],
+      "next": [
+        "7zip",
+        "binwalk",
+        "archpr"
       ]
     },
     {
@@ -318,63 +1352,199 @@
       ]
     },
     {
-      "id": "john",
+      "id": "crc32bf",
       "category": "archive",
-      "name": "John the Ripper",
-      "name_en": "John the Ripper jumbo",
-      "version": "1.9.0-jumbo-1",
-      "type": "cli",
-      "path": "john/john-1.9.0-jumbo-1-win64/run/john.exe",
+      "name": "CRC32 反推/修复",
+      "name_en": "crc32bf.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "04-压缩包与文件修复/scripts/crc32bf.py",
       "launch": {
-        "kind": "dir",
-        "target": "john/john-1.9.0-jumbo-1-win64/run"
+        "kind": "script",
+        "target": "04-压缩包与文件修复/scripts/crc32bf.bat"
       },
-      "summary": "提供 zip2john / rar2john / 7z2john 等哈希提取器，把加密压缩包转成 hashcat 能吃的哈希。",
-      "when": "要用 GPU（hashcat）跑压缩包口令时，先用它提取哈希。",
+      "summary": "暴力反推 CRC32 缺失的短字节，或一键修复 PNG 所有块 CRC。",
+      "when": "PNG 块 CRC 被改导致打不开，或已知 CRC 缺几个字符要还原。",
       "usage": [
         {
-          "title": "ZIP → 哈希",
-          "code": "cd D:\\杂项工具\\john\\john-1.9.0-jumbo-1-win64\\run\n.\\zip2john.exe D:\\work\\secret.zip > h.txt"
+          "title": "反推缺失字节",
+          "code": "python -X utf8 crc32bf.py --prefix \"AB\" --crc 0x112787e6 --len 2"
         },
         {
-          "title": "RAR → 哈希",
-          "code": ".\\rar2john.exe D:\\work\\secret.rar > h.txt"
-        },
-        {
-          "title": "7z → 哈希（需 Perl，见 perl 条目）",
-          "code": "perl 7z2john.pl D:\\work\\secret.7z > h.txt"
+          "title": "修 PNG 的 CRC",
+          "code": "python -X utf8 crc32bf.py --fix-png 坏图.png -o 修好.png"
         }
       ],
       "params": [
         {
-          "flag": "zip2john",
-          "desc": "ZIP 提取（deflate/store 都支持）"
+          "flag": "--prefix",
+          "desc": "已知的前缀内容"
         },
         {
-          "flag": "rar2john",
-          "desc": "RAR3/RAR5 提取"
+          "flag": "--crc",
+          "desc": "目标 CRC32（0x 开头或十进制）"
         },
         {
-          "flag": "7z2john.pl",
-          "desc": "7z 提取，Perl 脚本"
+          "flag": "--len",
+          "desc": "缺失字节数（默认 2，超过 4 会很慢）"
         },
         {
-          "flag": "office2john.py",
-          "desc": "Office 文档提取"
-        },
-        {
-          "flag": "pdf2john.pl",
-          "desc": "PDF 提取"
+          "flag": "--charset",
+          "desc": "printable/lower/upper/digit/alnum/hex/flag"
         }
       ],
       "pitfalls": [
-        "zip2john 是 cygwin 编译，不支持中文路径，先复制到纯 ASCII 目录（如 D:\\work）",
-        "7z2john.pl 需要 Perl 且 PATH 要含 perl/bin，见工具箱 perl 条目",
-        "--potfile-path 传绝对路径会 Permission denied，用默认或相对路径"
+        "暴力枚举限制在 4 字节以内；4 字节 95^4 要跑几分钟",
+        "只支持 CRC32（IEEE 0xEDB88320），不支持 CRC16/CRC64",
+        "--fix-png 只修 CRC，修不了「数据本身被改坏」"
       ],
       "next": [
-        "hashcat",
-        "perl"
+        "pngcheck",
+        "filecarve",
+        "cyberchef"
+      ]
+    },
+    {
+      "id": "fakeenc",
+      "category": "archive",
+      "name": "伪加密判定",
+      "name_en": "fakeenc.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "04-压缩包与文件修复/scripts/fakeenc.py",
+      "launch": {
+        "kind": "script",
+        "target": "04-压缩包与文件修复/scripts/fakeenc.bat"
+      },
+      "summary": "判定 ZIP/RAR 是不是伪加密，ZIP 可一键清标志位直接解压。",
+      "when": "压缩包要密码，但怀疑只是标志位被改（CTF 十次有八次是假的）。",
+      "usage": [
+        {
+          "title": "先判定",
+          "code": "python -X utf8 fakeenc.py 可疑.zip"
+        },
+        {
+          "title": "清除伪加密",
+          "code": "python -X utf8 fakeenc.py 可疑.zip -o 明文.zip"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-o",
+          "desc": "清除伪加密后另存（仅 ZIP）"
+        },
+        {
+          "flag": "--force",
+          "desc": "允许覆盖已存在的输出文件"
+        }
+      ],
+      "pitfalls": [
+        "真加密（数据区确实是密文）无法破解，只报告",
+        "ZIP 的 AES 加密（method 99）不处理",
+        "RAR 只做检测不做修复（改了容易彻底坏掉）"
+      ],
+      "next": [
+        "archpr",
+        "john",
+        "hashcat"
+      ]
+    },
+    {
+      "id": "filecarve",
+      "category": "archive",
+      "name": "文件雕取",
+      "name_en": "filecarve.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "04-压缩包与文件修复/scripts/filecarve.py",
+      "launch": {
+        "kind": "script",
+        "target": "04-压缩包与文件修复/scripts/filecarve.bat"
+      },
+      "summary": "从裸数据里按魔数找出内嵌文件并切出来（binwalk 的轻量替代）。",
+      "when": "镜像文件、内存转储、图片尾部疑似藏了 ZIP/PNG。",
+      "usage": [
+        {
+          "title": "先扫描看有什么",
+          "code": "python -X utf8 filecarve.py 镜像.bin"
+        },
+        {
+          "title": "实际切出来",
+          "code": "python -X utf8 filecarve.py 镜像.bin -o 输出目录"
+        },
+        {
+          "title": "只看尾部附加数据",
+          "code": "python -X utf8 filecarve.py 图片.png --tail"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-o",
+          "desc": "把雕出的文件写到这个目录"
+        },
+        {
+          "flag": "--tail",
+          "desc": "只显示第一个文件结束之后的附加数据"
+        },
+        {
+          "flag": "--min-size",
+          "desc": "小于这个字节数的片段不雕（默认 16）"
+        }
+      ],
+      "pitfalls": [
+        "只雕自带明确结束标记的格式（PNG/JPG/GIF/ZIP/PDF 等）",
+        "没有长度字段又没结束标记的（如原始 PE 段）只报位置不雕",
+        "一个文件被分成两段时会各雕一半，需要人工拼接"
+      ],
+      "next": [
+        "binwalk",
+        "foremost",
+        "7zip"
+      ]
+    },
+    {
+      "id": "filetype",
+      "category": "archive",
+      "name": "文件类型识别",
+      "name_en": "filetype.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "04-压缩包与文件修复/scripts/filetype.py",
+      "launch": {
+        "kind": "script",
+        "target": "04-压缩包与文件修复/scripts/filetype.bat"
+      },
+      "summary": "按魔数判断文件真实类型，并检查扩展名是否骗人。",
+      "when": "拿到可疑文件，第一步就该跑它——CTF 里扩展名几乎不可信。",
+      "usage": [
+        {
+          "title": "看单个文件",
+          "code": "python -X utf8 filetype.py 可疑文件"
+        },
+        {
+          "title": "整目录递归",
+          "code": "python -X utf8 filetype.py 题目目录 -r"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-r",
+          "desc": "递归子目录"
+        },
+        {
+          "flag": "-f",
+          "desc": "额外打印开头 32 字节的 hex"
+        }
+      ],
+      "pitfalls": [
+        "魔数只是开头几字节，精心构造的文件可以让它撒谎",
+        ".txt 里其实是 PNG 是最典型的「扩展名骗人」，脚本会明确报出来",
+        "分卷压缩包 .z01/.z02 的魔数和主包不同，已单独处理"
+      ],
+      "next": [
+        "filecarve",
+        "cyberchef",
+        "binwalk"
       ]
     },
     {
@@ -509,6 +1679,66 @@
       ]
     },
     {
+      "id": "john",
+      "category": "archive",
+      "name": "John the Ripper",
+      "name_en": "John the Ripper jumbo",
+      "version": "1.9.0-jumbo-1",
+      "type": "cli",
+      "path": "john/john-1.9.0-jumbo-1-win64/run/john.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "john/john-1.9.0-jumbo-1-win64/run"
+      },
+      "summary": "提供 zip2john / rar2john / 7z2john 等哈希提取器，把加密压缩包转成 hashcat 能吃的哈希。",
+      "when": "要用 GPU（hashcat）跑压缩包口令时，先用它提取哈希。",
+      "usage": [
+        {
+          "title": "ZIP → 哈希",
+          "code": "cd D:\\杂项工具\\john\\john-1.9.0-jumbo-1-win64\\run\n.\\zip2john.exe D:\\work\\secret.zip > h.txt"
+        },
+        {
+          "title": "RAR → 哈希",
+          "code": ".\\rar2john.exe D:\\work\\secret.rar > h.txt"
+        },
+        {
+          "title": "7z → 哈希（需 Perl，见 perl 条目）",
+          "code": "perl 7z2john.pl D:\\work\\secret.7z > h.txt"
+        }
+      ],
+      "params": [
+        {
+          "flag": "zip2john",
+          "desc": "ZIP 提取（deflate/store 都支持）"
+        },
+        {
+          "flag": "rar2john",
+          "desc": "RAR3/RAR5 提取"
+        },
+        {
+          "flag": "7z2john.pl",
+          "desc": "7z 提取，Perl 脚本"
+        },
+        {
+          "flag": "office2john.py",
+          "desc": "Office 文档提取"
+        },
+        {
+          "flag": "pdf2john.pl",
+          "desc": "PDF 提取"
+        }
+      ],
+      "pitfalls": [
+        "zip2john 是 cygwin 编译，不支持中文路径，先复制到纯 ASCII 目录（如 D:\\work）",
+        "7z2john.pl 需要 Perl 且 PATH 要含 perl/bin，见工具箱 perl 条目",
+        "--potfile-path 传绝对路径会 Permission denied，用默认或相对路径"
+      ],
+      "next": [
+        "hashcat",
+        "perl"
+      ]
+    },
+    {
       "id": "perl",
       "category": "archive",
       "name": "Strawberry Perl",
@@ -549,516 +1779,311 @@
       ]
     },
     {
-      "id": "cyberchef",
-      "category": "code",
-      "name": "CyberChef",
-      "name_en": "CyberChef",
-      "version": "11.5.0",
-      "type": "web",
-      "path": "02-编码识别/CyberChef/CyberChef_v11.5.0.html",
+      "id": "zipfix",
+      "category": "archive",
+      "name": "ZIP 结构体检",
+      "name_en": "zipfix.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "04-压缩包与文件修复/scripts/zipfix.py",
       "launch": {
-        "kind": "html",
-        "target": "02-编码识别/CyberChef/CyberChef_v11.5.0.html"
+        "kind": "script",
+        "target": "04-压缩包与文件修复/scripts/zipfix.bat"
       },
-      "summary": "「网络瑞士军刀」：300+ 操作，离线单页，Magic 自动识别编码并链式解码。",
-      "when": "一堆乱码不知道是什么编码、需要多层解码、或做 Base/XX/摩斯/培根/凯撒等变换时，第一个打开它。",
+      "summary": "逐条对账 ZIP 的中央目录/CRC/大小字段，能重建被删的中央目录。",
+      "when": "解压报「压缩包已损坏」，或中央目录被截断、条目偏移错乱。",
       "usage": [
         {
-          "title": "图形方式",
-          "steps": [
-            "双击卡片「打开工具」→ 浏览器载入本地页面",
-            "左侧输入乱码 → 点「Magic」或从 Operations 搜操作名",
-            "右侧 Output 实时出结果；可用「Bake」逐步调试"
-          ]
+          "title": "只体检",
+          "code": "python -X utf8 zipfix.py 坏包.zip"
         },
         {
-          "title": "常用操作名（搜索框直接输入）",
-          "code": "From Base64 / From Base32 / From Base58 / From Hex\nFrom Morse Code / ROT13 / Atbash Cipher / Bacon Cipher Decode\nMagic（自动识别） / From Charcode / URL Decode / From HTML Entity"
+          "title": "重建中央目录",
+          "code": "python -X utf8 zipfix.py 坏包.zip --rebuild -o 重建.zip"
         }
       ],
       "params": [
         {
-          "flag": "Magic",
-          "desc": "自动推测编码并给出候选操作，最省事"
+          "flag": "-o",
+          "desc": "修复后另存为这个文件"
         },
         {
-          "flag": "Recipe",
-          "desc": "把多个操作串成流水线，一次跑完多层解码"
+          "flag": "--rebuild",
+          "desc": "按本地文件头重建中央目录"
         },
         {
-          "flag": "Fork",
-          "desc": "对多行输入分别执行后续操作"
+          "flag": "--force",
+          "desc": "允许覆盖已存在的输出文件"
         }
       ],
       "pitfalls": [
-        "离线版不会自动更新，需要新版本时重新下载替换",
-        "显示层压缩（.br/.gz）文件可忽略，浏览器会直接读未压缩版",
-        "极大数据（>1MiB）会转为文件下载形式展示"
+        "不处理 ZIP64（超过 4GB 的包）",
+        "数据区本身被破坏（压缩流残缺）无法还原，只能报告受影响条目",
+        "重建只能恢复结构，恢复不了被覆盖的数据"
       ],
       "next": [
-        "imgsize"
+        "fakeenc",
+        "7zip",
+        "filetype"
       ]
     },
     {
-      "id": "imgsize",
-      "category": "stego",
-      "name": "imgsize 长宽校验",
-      "name_en": "imgsize.py",
+      "id": "dnsdump",
+      "category": "traffic",
+      "name": "DNS 导出与隧道识别",
+      "name_en": "dnsdump.py",
       "version": "1.0",
       "type": "script",
-      "path": "_脚本/imgsize.py",
+      "path": "05-流量分析/scripts/dnsdump.py",
       "launch": {
         "kind": "script",
-        "target": "_脚本/imgsize.bat"
+        "target": "05-流量分析/scripts/dnsdump.bat"
       },
-      "summary": "通过像素数据量与声明长宽对账，反推被篡改的真实宽高（PNG/BMP 严格，JPG 启发式）。",
-      "when": "图片显示异常、下半截是噪点、比例被拉伸，或怀疑 IHDR/SOF 被改过。",
+      "summary": "导出 pcap 里的 DNS 查询/响应，按超长子域名、编码标签、高频、TXT 异常打分找隧道，并能把隧道数据拼回来自动解码。",
+      "when": "DNS 隧道题：域名一长串、查询量巨大、TXT 记录可疑，需要批量导出、定位可疑项并把隐藏数据还原出来时。",
       "usage": [
         {
-          "title": "拖拽（最省事）",
+          "title": "一步到位：拼接+解码（最常用）",
           "steps": [
-            "把图片或文件夹拖到 _脚本/imgsize.bat 上松手"
+            "python -X utf8 dnsdump.py 题目.pcap --decode",
+            "脚本按根域名和编码类型分组拼接，自动试 base32/base64/hex"
+          ]
+        },
+        {
+          "title": "先看聚合再抓可疑",
+          "steps": [
+            "python -X utf8 dnsdump.py 题目.pcap --stats",
+            "python -X utf8 dnsdump.py 题目.pcap --tunnel"
+          ]
+        },
+        {
+          "title": "导出 CSV",
+          "code": "python -X utf8 dnsdump.py 题目.pcap --csv -o dns.csv"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--decode",
+          "desc": "把可疑标签按根域名+编码类型分组拼接，自动解码（找 flag 首选）"
+        },
+        {
+          "flag": "--tunnel",
+          "desc": "只输出隧道嫌疑分达标的项"
+        },
+        {
+          "flag": "--threshold N",
+          "desc": "调整可疑阈值，默认 4.0，调低会更敏感"
+        },
+        {
+          "flag": "--stats",
+          "desc": "按根域名输出查询/响应/NXDOMAIN 聚合表"
+        },
+        {
+          "flag": "--csv",
+          "desc": "输出 CSV，便于丢进 Excel 或脚本二次处理"
+        },
+        {
+          "flag": "-o FILE",
+          "desc": "写入文件，已存在需 --force"
+        }
+      ],
+      "pitfalls": [
+        "隧道分是启发式打分，会误报；分数高只代表「值得看一眼」，不是判决",
+        "同一域名下可能混有 base32 和 base64 两类数据，--decode 已按类型分开拼接，不要手动混拼",
+        "只认端口 53 的标准 DNS，mDNS(5353)/LLMNR/DoH/DoT 一个都不处理",
+        "DNS over TCP 只拼接同一四元组的分段，跨连接的长报文可能解不全"
+      ],
+      "next": [
+        "wireshark",
+        "tshark",
+        "cyberchef"
+      ]
+    },
+    {
+      "id": "nmap",
+      "category": "traffic",
+      "name": "nmap",
+      "name_en": "Nmap",
+      "version": "7.992",
+      "type": "cli",
+      "path": "05-流量分析/nmap/nmap.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "05-流量分析/nmap"
+      },
+      "summary": "端口扫描、服务与版本识别、OS 指纹、NSE 脚本引擎。",
+      "when": "流量题要还原目标服务、或授权渗透测试的信息收集阶段。",
+      "usage": [
+        {
+          "title": "基础扫描",
+          "code": ".\\nmap.exe 192.168.1.1"
+        },
+        {
+          "title": "常见端口 + 版本",
+          "code": ".\\nmap.exe -sV -p 1-1000 192.168.1.1"
+        },
+        {
+          "title": "全端口快速",
+          "code": ".\\nmap.exe -p- --min-rate 1000 192.168.1.1"
+        },
+        {
+          "title": "NSE 脚本",
+          "code": ".\\nmap.exe -sV --script http-title,http-headers -p 80,443 目标"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-sV",
+          "desc": "服务版本识别"
+        },
+        {
+          "flag": "-p",
+          "desc": "端口范围（-p- 为全端口）"
+        },
+        {
+          "flag": "-O",
+          "desc": "OS 指纹（需管理员）"
+        },
+        {
+          "flag": "-sS",
+          "desc": "SYN 半开扫描（需 Npcap + 管理员）"
+        },
+        {
+          "flag": "--script",
+          "desc": "NSE 脚本"
+        }
+      ],
+      "pitfalls": [
+        "未装 Npcap 时会警告并回退 connect() 模式，普通扫描仍可用，但 SYN/OS 指纹受限",
+        "本机是便携解包版，不需要安装、不写注册表",
+        "仅用于自有资产或授权目标"
+      ],
+      "next": [
+        "tshark"
+      ]
+    },
+    {
+      "id": "pcapcarve",
+      "category": "traffic",
+      "name": "pcap 明文提取",
+      "name_en": "pcapcarve.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "05-流量分析/scripts/pcapcarve.py",
+      "launch": {
+        "kind": "script",
+        "target": "05-流量分析/scripts/pcapcarve.bat"
+      },
+      "summary": "自己解析 pcap/pcapng，按 TCP 流重组并提取 HTTP/FTP/Telnet/SMTP 明文内容。",
+      "when": "拿到 .pcap/.pcapng 要捞 HTTP 响应体、FTP 传输、Telnet 明文，又不想开 Wireshark 时。",
+      "usage": [
+        {
+          "title": "先列流再挑一条看",
+          "steps": [
+            "python -X utf8 pcapcarve.py 题目.pcap --list",
+            "python -X utf8 pcapcarve.py 题目.pcap --stream 3",
+            "需要存档时加 -o 结果.txt"
           ]
         },
         {
           "title": "命令行",
-          "code": "$env:LOCALAPPDATA\\Python\\pythoncore-3.14-64\\python.exe -X utf8 D:\\杂项工具\\_脚本\\imgsize.py 题目.png"
-        },
-        {
-          "title": "批量（递归）",
-          "code": "... imgsize.py D:\\题目\\ -r"
+          "code": "python -X utf8 pcapcarve.py 题目.pcapng -o 全部内容.txt --force"
         }
       ],
       "params": [
         {
-          "flag": "-r",
-          "desc": "递归子目录"
+          "flag": "--list",
+          "desc": "只列所有 TCP 流（编号、端点、协议、字节数）"
         },
         {
-          "flag": "多路径",
-          "desc": "可一次传多个文件"
+          "flag": "--stream N",
+          "desc": "只输出第 N 条流的内容"
+        },
+        {
+          "flag": "--follow N",
+          "desc": "按抓包顺序交错显示第 N 条流的双向数据"
+        },
+        {
+          "flag": "-o FILE",
+          "desc": "结果写入文件，已存在需 --force"
+        },
+        {
+          "flag": "--limit N",
+          "desc": "单段最多显示多少字节，默认 200000，0 为不限"
         }
       ],
       "pitfalls": [
-        "必须加 -X utf8，否则中文路径乱码",
-        "pngcheck 在 CRC 被重算后完全漏检，本脚本靠数据量对账仍能发现",
-        "JPG 没有像素长度字段，只能靠底部中性灰填充带启发式判断"
+        "IP 分片重叠时按「先到先得」合并，不做 Wireshark 那种启发式裁决，结果可能与 tshark 略有差异",
+        "流序号从 1 开始（按四元组首次出现顺序），与 tshark follow,tcp 的 0 基编号不同，别直接套用",
+        "只处理 TCP；纯 UDP 的题（DNS 除外）看不到内容，加密流（TLS）导出来也是密文",
+        "HTTP 分块传输且抓包不完整时 chunked 解码会提前结束，响应体会比实际短"
       ],
       "next": [
-        "pngcheck",
-        "stegsolve",
-        "exiftool"
-      ]
-    },
-    {
-      "id": "pngcheck",
-      "category": "stego",
-      "name": "pngcheck 套件",
-      "name_en": "pngcheck / pngsplit / png-fix-IDAT",
-      "version": "3.0.3",
-      "type": "cli",
-      "path": "pngcheck/pngcheck.exe",
-      "alt_paths": [
-        "pngcheck/pngsplit.exe",
-        "pngcheck/png-fix-IDAT-windowsize.exe"
-      ],
-      "launch": {
-        "kind": "dir",
-        "target": "pngcheck"
-      },
-      "summary": "PNG 结构校验、chunk 拆分、IDAT 窗口修复；能在任意文件里搜索并提取 PNG。",
-      "when": "PNG 打不开、CRC 报错、怀疑 tEXt 藏 flag、或要从 bin 里捞图片。",
-      "usage": [
-        {
-          "title": "基本校验",
-          "code": ".\\pngcheck\\pngcheck.exe 图片.png"
-        },
-        {
-          "title": "逐 chunk 结构",
-          "code": ".\\pngcheck\\pngcheck.exe -v 图片.png"
-        },
-        {
-          "title": "看 tEXt 文本块（藏 flag 必查）",
-          "code": ".\\pngcheck\\pngcheck.exe -t 图片.png"
-        },
-        {
-          "title": "乱码时转义高位字符",
-          "code": ".\\pngcheck\\pngcheck.exe -7 图片.png"
-        },
-        {
-          "title": "调色板/透明度",
-          "code": ".\\pngcheck\\pngcheck.exe -p 图片.png"
-        },
-        {
-          "title": "只报错",
-          "code": ".\\pngcheck\\pngcheck.exe -q 图片.png"
-        },
-        {
-          "title": "在任意文件里搜 PNG",
-          "code": ".\\pngcheck\\pngcheck.exe -s 文件.bin"
-        },
-        {
-          "title": "搜索并提取",
-          "code": ".\\pngcheck\\pngcheck.exe -x 文件.bin"
-        },
-        {
-          "title": "拆 chunk",
-          "code": ".\\pngcheck\\pngsplit.exe 图片.png"
-        },
-        {
-          "title": "修 IDAT 窗口",
-          "code": ".\\pngcheck\\png-fix-IDAT-windowsize.exe 图片.png"
-        }
-      ],
-      "params": [
-        {
-          "flag": "-v / -vv",
-          "desc": "详细结构 / 解码并打印每行 filter"
-        },
-        {
-          "flag": "-t",
-          "desc": "打印 tEXt 文本块"
-        },
-        {
-          "flag": "-7",
-          "desc": "打印 tEXt 并转义高位字符"
-        },
-        {
-          "flag": "-p",
-          "desc": "打印 PLTE 调色板与 tRNS"
-        },
-        {
-          "flag": "-q",
-          "desc": "只输出错误"
-        },
-        {
-          "flag": "-s / -x",
-          "desc": "在任意文件中搜索 / 搜索并提取"
-        }
-      ],
-      "pitfalls": [
-        "只验 CRC：改完长宽并重算 CRC 就查不出来，高度改大时甚至报 No errors detected",
-        "怀疑尺寸时务必配合 imgsize.py",
-        "参数可组合：-q -7、-v -t"
-      ],
-      "next": [
-        "imgsize",
-        "stegsolve",
+        "wireshark",
+        "tshark",
         "binwalk"
       ]
     },
     {
-      "id": "stegsolve",
-      "category": "stego",
-      "name": "StegSolve",
-      "name_en": "StegSolve",
-      "version": "1.4",
-      "type": "gui",
-      "path": "StegSolve/StegSolve-1.4.jar",
+      "id": "tcpextract",
+      "category": "traffic",
+      "name": "TCP 流重组导出",
+      "name_en": "tcpextract.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "05-流量分析/scripts/tcpextract.py",
       "launch": {
-        "kind": "bat",
-        "target": "StegSolve/启动StegSolve.bat",
-        "workdir": "StegSolve"
+        "kind": "script",
+        "target": "05-流量分析/scripts/tcpextract.bat"
       },
-      "summary": "图片逐通道、逐位平面查看，Frame Browser 翻帧，Stereogram Solver 解立体图。",
-      "when": "图片肉眼看不出问题，怀疑低位藏数据、多帧 GIF 藏图、或需要看某个颜色通道。",
+      "summary": "按四元组分流、处理乱序重传后双向重组，导出 stream_N_client/server.txt。",
+      "when": "要把 pcap 里每条 TCP 会话分别落成文件、再按类型分拣或丢给其他工具分析时。",
       "usage": [
         {
-          "title": "图形方式",
+          "title": "列流后批量导出",
           "steps": [
-            "双击 StegSolve/启动StegSolve.bat",
-            "File → Open 选图片",
-            "底部箭头切换通道/位平面"
+            "python -X utf8 tcpextract.py 题目.pcap --list",
+            "python -X utf8 tcpextract.py 题目.pcap --all -o 导出目录",
+            "目录里会得到 stream_1_client.txt / stream_1_server.txt …"
           ]
         },
         {
-          "title": "Frame Browser",
-          "code": "Analyse → Frame Browser（GIF 多帧逐帧看）"
-        },
-        {
-          "title": "Stereogram Solver",
-          "code": "Analyse → Stereogram Solver（立体图/随机点图）"
+          "title": "命令行",
+          "code": "python -X utf8 tcpextract.py 题目.pcap --stream 2 -o 导出"
         }
       ],
       "params": [
         {
-          "flag": "Red/Green/Blue plane",
-          "desc": "单通道查看"
+          "flag": "--list",
+          "desc": "列出所有流：客户端/服务端、端口、双向字节数"
         },
         {
-          "flag": "Bit planes 0-7",
-          "desc": "逐位平面，低位平面常藏 LSB 数据"
+          "flag": "--stream N",
+          "desc": "只导出第 N 条流"
         },
         {
-          "flag": "Frame Browser",
-          "desc": "多帧图片逐帧浏览"
+          "flag": "--all",
+          "desc": "导出全部流到 -o 指定的目录"
         },
         {
-          "flag": "Stereogram Solver",
-          "desc": "解立体图"
+          "flag": "-o DIR",
+          "desc": "输出目录，不存在会自动创建"
+        },
+        {
+          "flag": "--limit N",
+          "desc": "单方向最多导出多少字节，默认 0 为不限"
         }
       ],
       "pitfalls": [
-        "需要 Java，双击无反应先查 java -version",
-        "大图逐位平面切换较慢，耐心等"
+        "序号回绕只告警不真正处理：超过 4GB 的流会跨 2^32 边界，拼接可能错位，这种题请用 tshark follow,tcp,raw",
+        "抓包丢掉的字节会如实留 0x00 并统计空洞数，不会假装数据完整；空洞位置在 stderr 里报",
+        "客户端是「先发 SYN 的那一方」；只有单向流量（没抓到握手）时按地址排序取第一个，可能标反",
+        "导出的 .txt 是原始字节不做编码转换，遇到二进制内容请用十六进制查看器再看"
       ],
       "next": [
-        "pngcheck",
-        "imgsize"
-      ]
-    },
-    {
-      "id": "exiftool",
-      "category": "stego",
-      "name": "ExifTool",
-      "name_en": "ExifTool",
-      "version": "13.59",
-      "type": "cli",
-      "path": "CTF-tools/exiftool/exiftool.exe",
-      "launch": {
-        "kind": "dir",
-        "target": "CTF-tools/exiftool"
-      },
-      "summary": "读/写图片、文档、音视频元数据：GPS、作者、注释、隐藏字段。",
-      "when": "拿到任何文件先看元数据，flag 常藏在 Comment/Artist/GPS 里。",
-      "usage": [
-        {
-          "title": "全部元数据",
-          "code": ".\\exiftool.exe 图片.png"
-        },
-        {
-          "title": "分组显示全部字段",
-          "code": ".\\exiftool.exe -a -G1 图片.png"
-        },
-        {
-          "title": "只取值（便于管道）",
-          "code": ".\\exiftool.exe -b -Comment 图片.png"
-        },
-        {
-          "title": "递归扫描目录",
-          "code": ".\\exiftool.exe -r D:\\题目\\"
-        }
-      ],
-      "params": [
-        {
-          "flag": "-a",
-          "desc": "显示重复标签"
-        },
-        {
-          "flag": "-G1",
-          "desc": "按分组显示"
-        },
-        {
-          "flag": "-b",
-          "desc": "二进制/原始值输出"
-        },
-        {
-          "flag": "-r",
-          "desc": "递归目录"
-        }
-      ],
-      "pitfalls": [
-        "exiftool 只读文件头，报告的是被篡改后的值，不能判断真假"
-      ],
-      "next": [
-        "imgsize",
-        "binwalk"
-      ]
-    },
-    {
-      "id": "binwalk",
-      "category": "forensics",
-      "name": "binwalk",
-      "name_en": "binwalk",
-      "version": "2.3.4",
-      "type": "cli",
-      "path": "binwalk/binwalk.bat",
-      "launch": {
-        "kind": "bat",
-        "target": "binwalk/binwalk.bat",
-        "workdir": "binwalk"
-      },
-      "summary": "文件签名扫描、自动提取嵌套文件、熵分析找加密/压缩段。",
-      "when": "一个文件里疑似藏了多个文件，或拿到固件/镜像要先摸清结构。",
-      "usage": [
-        {
-          "title": "签名扫描",
-          "code": ".\\binwalk\\binwalk.bat 题目.bin"
-        },
-        {
-          "title": "自动提取",
-          "code": ".\\binwalk\\binwalk.bat -e 题目.bin"
-        },
-        {
-          "title": "熵分析",
-          "code": ".\\binwalk\\binwalk.bat -E 题目.bin"
-        },
-        {
-          "title": "找可执行代码段",
-          "code": ".\\binwalk\\binwalk.bat -A 题目.bin"
-        }
-      ],
-      "params": [
-        {
-          "flag": "-e",
-          "desc": "自动提取（结果在 _题目.bin.extracted/）"
-        },
-        {
-          "flag": "-E",
-          "desc": "熵分析"
-        },
-        {
-          "flag": "-A",
-          "desc": "找 CPU 架构签名"
-        },
-        {
-          "flag": "-D",
-          "desc": "自定义签名类型"
-        }
-      ],
-      "pitfalls": [
-        "必须用 binwalk.bat（自带 UTF-8 环境，能处理中文路径）",
-        "装在独立虚拟环境 binwalk/Scripts/python.exe，不要 pip 装进系统 Python",
-        "-e 依赖外部工具（7z/dd），Windows 上部分规则失败，失败时用 foremost 兜底"
-      ],
-      "next": [
-        "foremost",
-        "7zip"
-      ]
-    },
-    {
-      "id": "foremost",
-      "category": "forensics",
-      "name": "foremost",
-      "name_en": "foremost",
-      "version": "1.5.7",
-      "type": "cli",
-      "path": "foremost/foremost.exe",
-      "launch": {
-        "kind": "dir",
-        "target": "foremost"
-      },
-      "summary": "按文件头尾雕刻恢复，比 binwalk -e 更激进的 carve 工具。",
-      "when": "binwalk 提取失败、文件头被破坏、或要从镜像里批量捞图片/文档。",
-      "usage": [
-        {
-          "title": "只找 PNG",
-          "code": "cd D:\\杂项工具\\foremost\n.\\foremost.exe -t png -i 题目.bin -o 输出目录"
-        },
-        {
-          "title": "全类型",
-          "code": ".\\foremost.exe -t all -i 题目.bin -o 输出目录"
-        },
-        {
-          "title": "指定多类型",
-          "code": ".\\foremost.exe -t jpg,png,gif -i 题目.bin -o 输出目录"
-        }
-      ],
-      "params": [
-        {
-          "flag": "-t",
-          "desc": "文件类型（all/jpg/png/gif/pdf/zip...）"
-        },
-        {
-          "flag": "-i",
-          "desc": "输入文件或设备"
-        },
-        {
-          "flag": "-o",
-          "desc": "输出目录（必须不存在或为空）"
-        },
-        {
-          "flag": "-T",
-          "desc": "带时间戳的子目录"
-        }
-      ],
-      "pitfalls": [
-        "必须在 foremost 自己目录下跑，要读同目录 foremost.conf",
-        "输出目录必须为空，否则报错",
-        "结果：输出目录/类型/ 下是文件本体，audit.txt 是偏移与大小报告"
-      ],
-      "next": [
-        "binwalk"
-      ]
-    },
-    {
-      "id": "volatility3",
-      "category": "forensics",
-      "name": "Volatility 3",
-      "name_en": "Volatility 3",
-      "version": "2.28.2",
-      "type": "cli",
-      "path": "06-取证/volatility3/venv/Scripts/vol.exe",
-      "launch": {
-        "kind": "bat",
-        "target": "06-取证/volatility3/启动Volatility.bat",
-        "workdir": "06-取证/volatility3"
-      },
-      "summary": "内存镜像取证事实标准：进程、网络连接、注册表、凭据、文件系统全可挖。",
-      "when": "拿到 .raw/.mem/.vmem 内存镜像，或需要从内存里找 flag、密码、进程。",
-      "usage": [
-        {
-          "title": "识别镜像信息（第一步永远先跑）",
-          "code": "vol -f memory.raw windows.info"
-        },
-        {
-          "title": "列进程",
-          "code": "vol -f memory.raw windows.pslist"
-        },
-        {
-          "title": "进程树",
-          "code": "vol -f memory.raw windows.pstree"
-        },
-        {
-          "title": "网络连接",
-          "code": "vol -f memory.raw windows.netscan"
-        },
-        {
-          "title": "命令行历史",
-          "code": "vol -f memory.raw windows.cmdline"
-        },
-        {
-          "title": "扫文件",
-          "code": "vol -f memory.raw windows.filescan"
-        },
-        {
-          "title": "导出文件",
-          "code": "vol -f memory.raw windows.dumpfiles --virtaddr 0x..."
-        },
-        {
-          "title": "注册表",
-          "code": "vol -f memory.raw windows.registry.hivelist"
-        }
-      ],
-      "params": [
-        {
-          "flag": "-f",
-          "desc": "内存镜像文件"
-        },
-        {
-          "flag": "-o",
-          "desc": "输出目录"
-        },
-        {
-          "flag": "--cache-path",
-          "desc": "符号缓存目录（默认 APPDATA）"
-        },
-        {
-          "flag": "-u / --offline",
-          "desc": "允许/禁止联网下载符号表"
-        },
-        {
-          "flag": "--parallelism",
-          "desc": "并行模式 processes/threads/off"
-        }
-      ],
-      "pitfalls": [
-        "首次跑某系统版本会自动下载符号表，需要网络；离线环境要预置 symbols",
-        "APPDATA 不可写时用 --cache-path 指到可写目录（本机启动脚本已处理）",
-        "内存镜像动辄数 GB，插件跑得慢是正常的"
-      ],
-      "next": [
-        "binwalk"
+        "wireshark",
+        "tshark",
+        "filetype"
       ]
     },
     {
@@ -1145,66 +2170,743 @@
       ]
     },
     {
-      "id": "nmap",
+      "id": "usbhid",
       "category": "traffic",
-      "name": "nmap",
-      "name_en": "Nmap",
-      "version": "7.992",
-      "type": "cli",
-      "path": "05-流量分析/nmap/nmap.exe",
+      "name": "USB HID 键盘鼠标还原",
+      "name_en": "usbhid.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "05-流量分析/scripts/usbhid.py",
       "launch": {
-        "kind": "dir",
-        "target": "05-流量分析/nmap"
+        "kind": "script",
+        "target": "05-流量分析/scripts/usbhid.bat"
       },
-      "summary": "端口扫描、服务与版本识别、OS 指纹、NSE 脚本引擎。",
-      "when": "流量题要还原目标服务、或授权渗透测试的信息收集阶段。",
+      "summary": "解 usbmon/USBPcap 记录，从 HID 中断报告还原键盘输入（含 Shift/Ctrl）与鼠标轨迹图。",
+      "when": "USB 流量题：给了抓 USB 总线的 pcap，要还原敲出的 flag 或鼠标画出的轨迹时。",
       "usage": [
         {
-          "title": "基础扫描",
-          "code": ".\\nmap.exe 192.168.1.1"
+          "title": "先看设备分组",
+          "steps": [
+            "python -X utf8 usbhid.py 题目.pcap --list",
+            "python -X utf8 usbhid.py 题目.pcap --keyboard",
+            "鼠标题改 --mouse -o 轨迹.png"
+          ]
         },
         {
-          "title": "常见端口 + 版本",
-          "code": ".\\nmap.exe -sV -p 1-1000 192.168.1.1"
-        },
-        {
-          "title": "全端口快速",
-          "code": ".\\nmap.exe -p- --min-rate 1000 192.168.1.1"
-        },
-        {
-          "title": "NSE 脚本",
-          "code": ".\\nmap.exe -sV --script http-title,http-headers -p 80,443 目标"
+          "title": "命令行",
+          "code": "python -X utf8 usbhid.py 题目.pcap --all -o 轨迹.png"
         }
       ],
       "params": [
         {
-          "flag": "-sV",
-          "desc": "服务版本识别"
+          "flag": "--keyboard",
+          "desc": "只还原键盘，输出含 <CR>/<0x01> 等可见化控制字符"
         },
         {
-          "flag": "-p",
-          "desc": "端口范围（-p- 为全端口）"
+          "flag": "--mouse",
+          "desc": "只还原鼠标轨迹，可用 -o 输出 PNG"
         },
         {
-          "flag": "-O",
-          "desc": "OS 指纹（需管理员）"
+          "flag": "--all",
+          "desc": "键盘鼠标都处理（默认行为）"
         },
         {
-          "flag": "-sS",
-          "desc": "SYN 半开扫描（需 Npcap + 管理员）"
+          "flag": "--raw",
+          "desc": "额外打印每条 HID 原始报告十六进制，便于对照"
         },
         {
-          "flag": "--script",
-          "desc": "NSE 脚本"
+          "flag": "--device N",
+          "desc": "只看第 N 组设备，先用 --list 查编号"
+        },
+        {
+          "flag": "-o FILE",
+          "desc": "鼠标轨迹图输出路径（PNG，纯 zlib 手写）"
         }
       ],
       "pitfalls": [
-        "未装 Npcap 时会警告并回退 connect() 模式，普通扫描仍可用，但 SYN/OS 指纹受限",
-        "本机是便携解包版，不需要安装、不写注册表",
-        "仅用于自有资产或授权目标"
+        "抓包漏掉「松手」报告时，连打同一个字母（如 flag 里的 ll）只会出一个字符，这是数据缺失不是解码错",
+        "只解中断传输（transfer_type=1）的 HID 报告，控制传输里的 GET_REPORT/SET_REPORT 不处理",
+        "标准 8 字节 boot 报告才可靠；6 字节或 NKRO 位图报告会走兼容分支并给出警告，结果需人工核对",
+        "鼠标只还原相对位移，触摸板/数位板这类绝对坐标设备解不出来"
       ],
       "next": [
-        "tshark"
+        "wireshark",
+        "tshark",
+        "cyberchef"
+      ]
+    },
+    {
+      "id": "binwalk",
+      "category": "forensics",
+      "name": "binwalk",
+      "name_en": "binwalk",
+      "version": "2.3.4",
+      "type": "cli",
+      "path": "binwalk/binwalk.bat",
+      "launch": {
+        "kind": "bat",
+        "target": "binwalk/binwalk.bat",
+        "workdir": "binwalk"
+      },
+      "summary": "文件签名扫描、自动提取嵌套文件、熵分析找加密/压缩段。",
+      "when": "一个文件里疑似藏了多个文件，或拿到固件/镜像要先摸清结构。",
+      "usage": [
+        {
+          "title": "签名扫描",
+          "code": ".\\binwalk\\binwalk.bat 题目.bin"
+        },
+        {
+          "title": "自动提取",
+          "code": ".\\binwalk\\binwalk.bat -e 题目.bin"
+        },
+        {
+          "title": "熵分析",
+          "code": ".\\binwalk\\binwalk.bat -E 题目.bin"
+        },
+        {
+          "title": "找可执行代码段",
+          "code": ".\\binwalk\\binwalk.bat -A 题目.bin"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-e",
+          "desc": "自动提取（结果在 _题目.bin.extracted/）"
+        },
+        {
+          "flag": "-E",
+          "desc": "熵分析"
+        },
+        {
+          "flag": "-A",
+          "desc": "找 CPU 架构签名"
+        },
+        {
+          "flag": "-D",
+          "desc": "自定义签名类型"
+        }
+      ],
+      "pitfalls": [
+        "必须用 binwalk.bat（自带 UTF-8 环境，能处理中文路径）",
+        "装在独立虚拟环境 binwalk/Scripts/python.exe，不要 pip 装进系统 Python",
+        "-e 依赖外部工具（7z/dd），Windows 上部分规则失败，失败时用 foremost 兜底"
+      ],
+      "next": [
+        "foremost",
+        "7zip"
+      ]
+    },
+    {
+      "id": "deleted",
+      "category": "forensics",
+      "name": "NTFS 已删除文件枚举",
+      "name_en": "deleted.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "06-取证/scripts/deleted.py",
+      "launch": {
+        "kind": "script",
+        "target": "06-取证/scripts/deleted.bat"
+      },
+      "summary": "直接解析 $MFT，列出已删除但记录还在的文件名/大小/时间。",
+      "when": "取证要查「这个盘上原来有什么、被删了什么」。",
+      "usage": [
+        {
+          "title": "读卷（需管理员）",
+          "code": "python -X utf8 deleted.py --drive D"
+        },
+        {
+          "title": "解析 MFT 镜像",
+          "code": "python -X utf8 deleted.py --mft MFT.dd --csv 已删除.csv"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--drive",
+          "desc": "盘符，如 D（需管理员权限）"
+        },
+        {
+          "flag": "--mft",
+          "desc": "MFT 镜像文件"
+        },
+        {
+          "flag": "--csv",
+          "desc": "输出 CSV"
+        },
+        {
+          "flag": "--all",
+          "desc": "连在用的记录一起列出"
+        }
+      ],
+      "pitfalls": [
+        "--drive 需要管理员权限，否则明确报错",
+        "只列出记录，不恢复数据；能否恢复取决于数据簇是否被覆盖",
+        "只支持 NTFS，FAT/exFAT 不适用"
+      ],
+      "next": [
+        "volatility3",
+        "foremost",
+        "exiftool"
+      ]
+    },
+    {
+      "id": "foremost",
+      "category": "forensics",
+      "name": "foremost",
+      "name_en": "foremost",
+      "version": "1.5.7",
+      "type": "cli",
+      "path": "foremost/foremost.exe",
+      "launch": {
+        "kind": "dir",
+        "target": "foremost"
+      },
+      "summary": "按文件头尾雕刻恢复，比 binwalk -e 更激进的 carve 工具。",
+      "when": "binwalk 提取失败、文件头被破坏、或要从镜像里批量捞图片/文档。",
+      "usage": [
+        {
+          "title": "只找 PNG",
+          "code": "cd D:\\杂项工具\\foremost\n.\\foremost.exe -t png -i 题目.bin -o 输出目录"
+        },
+        {
+          "title": "全类型",
+          "code": ".\\foremost.exe -t all -i 题目.bin -o 输出目录"
+        },
+        {
+          "title": "指定多类型",
+          "code": ".\\foremost.exe -t jpg,png,gif -i 题目.bin -o 输出目录"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-t",
+          "desc": "文件类型（all/jpg/png/gif/pdf/zip...）"
+        },
+        {
+          "flag": "-i",
+          "desc": "输入文件或设备"
+        },
+        {
+          "flag": "-o",
+          "desc": "输出目录（必须不存在或为空）"
+        },
+        {
+          "flag": "-T",
+          "desc": "带时间戳的子目录"
+        }
+      ],
+      "pitfalls": [
+        "必须在 foremost 自己目录下跑，要读同目录 foremost.conf",
+        "输出目录必须为空，否则报错",
+        "结果：输出目录/类型/ 下是文件本体，audit.txt 是偏移与大小报告"
+      ],
+      "next": [
+        "binwalk"
+      ]
+    },
+    {
+      "id": "hexview",
+      "category": "forensics",
+      "name": "十六进制查看器",
+      "name_en": "hexview.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "06-取证/scripts/hexview.py",
+      "launch": {
+        "kind": "script",
+        "target": "06-取证/scripts/hexview.bat"
+      },
+      "summary": "看字节、跳偏移、搜十六进制/文本，带 ASCII 侧栏。",
+      "when": "要确认某个偏移是什么、搜 flag 在哪、改文件头前先看一眼。",
+      "usage": [
+        {
+          "title": "看开头",
+          "code": "python -X utf8 hexview.py 文件.bin"
+        },
+        {
+          "title": "跳偏移看一段",
+          "code": "python -X utf8 hexview.py 文件.bin -o 0x100 -n 512"
+        },
+        {
+          "title": "搜字节/文本",
+          "code": "python -X utf8 hexview.py 文件.bin -s 504b0304"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-o",
+          "desc": "起始偏移（支持 0x100）"
+        },
+        {
+          "flag": "-n",
+          "desc": "显示字节数（默认 256）"
+        },
+        {
+          "flag": "-s",
+          "desc": "搜索十六进制字节串"
+        },
+        {
+          "flag": "-t",
+          "desc": "搜索文本（UTF-8 与 UTF-16LE 都试）"
+        }
+      ],
+      "pitfalls": [
+        "只读，不能改字节（改字节请用专门的编辑器）",
+        "超大文件搜索会全量读入内存"
+      ],
+      "next": [
+        "exiftool",
+        "strings",
+        "cyberchef"
+      ]
+    },
+    {
+      "id": "metawipe",
+      "category": "forensics",
+      "name": "元数据体检/清除",
+      "name_en": "metawipe.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "06-取证/scripts/metawipe.py",
+      "launch": {
+        "kind": "script",
+        "target": "06-取证/scripts/metawipe.bat"
+      },
+      "summary": "挖出 JPEG/PNG/GIF 里的 EXIF/GPS/注释/缩略图，并可无损清除。",
+      "when": "怀疑图片藏了 GPS/设备信息/内嵌缩略图，或发图前要去隐私。",
+      "usage": [
+        {
+          "title": "体检",
+          "code": "python -X utf8 metawipe.py 图片.jpg"
+        },
+        {
+          "title": "清除并另存",
+          "code": "python -X utf8 metawipe.py 图片.jpg --strip -o 干净.jpg"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--strip",
+          "desc": "清除元数据（需配 -o）"
+        },
+        {
+          "flag": "-o",
+          "desc": "清除后另存为这个文件"
+        },
+        {
+          "flag": "--force",
+          "desc": "允许覆盖已存在的输出文件"
+        }
+      ],
+      "pitfalls": [
+        "EXIF 里的缩略图常是原图副本，能还原被裁剪掉的内容",
+        "--strip 只删元数据段不动图像数据，所以画质无损",
+        "不处理 HEIC/RAW/PDF（这些用 exiftool）"
+      ],
+      "next": [
+        "exiftool",
+        "imgsize",
+        "stegsolve"
+      ]
+    },
+    {
+      "id": "strings",
+      "category": "forensics",
+      "name": "增强版 strings",
+      "name_en": "strings.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "06-取证/scripts/strings.py",
+      "launch": {
+        "kind": "script",
+        "target": "06-取证/scripts/strings.bat"
+      },
+      "summary": "同时扫 ASCII/UTF-8/UTF-16LE/BE 四种编码，支持正则过滤。",
+      "when": "在内存转储、PE、图片里找 flag；系统 strings 只认 ASCII 会漏一半。",
+      "usage": [
+        {
+          "title": "全编码扫描",
+          "code": "python -X utf8 strings.py 文件.bin"
+        },
+        {
+          "title": "正则过滤",
+          "code": "python -X utf8 strings.py 文件.bin -r \"flag\\{.*\\}\""
+        },
+        {
+          "title": "只看 UTF-16 + 带偏移",
+          "code": "python -X utf8 strings.py 文件.bin --enc utf16 --with-offset"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-m",
+          "desc": "最短字符串长度（默认 4）"
+        },
+        {
+          "flag": "-r",
+          "desc": "只输出匹配这个正则的"
+        },
+        {
+          "flag": "--enc",
+          "desc": "all/ascii/utf16/utf16be/cjk"
+        },
+        {
+          "flag": "--with-offset",
+          "desc": "显示每条的字节偏移"
+        }
+      ],
+      "pitfalls": [
+        "只提取连续可打印字符，被拆散的数据要先解密/解压",
+        "UTF-16 数据不一定 2 字节对齐，脚本两种相位都扫",
+        "不处理 GBK 等双字节编码"
+      ],
+      "next": [
+        "hexview",
+        "volatility3",
+        "cyberchef"
+      ]
+    },
+    {
+      "id": "timeline",
+      "category": "forensics",
+      "name": "文件时间线",
+      "name_en": "timeline.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "06-取证/scripts/timeline.py",
+      "launch": {
+        "kind": "script",
+        "target": "06-取证/scripts/timeline.bat"
+      },
+      "summary": "把目录下所有文件的 mtime/atime/ctime 汇总成一条可排序时间线。",
+      "when": "要还原「先创建了哪个、后来改了什么」的操作顺序。",
+      "usage": [
+        {
+          "title": "按修改时间排序",
+          "code": "python -X utf8 timeline.py 目录"
+        },
+        {
+          "title": "按访问时间",
+          "code": "python -X utf8 timeline.py 目录 --sort atime"
+        },
+        {
+          "title": "限时间区间 + 导出 CSV",
+          "code": "python -X utf8 timeline.py 目录 --since 2026-01-01 --csv 时间线.csv"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--sort",
+          "desc": "mtime/atime/ctime"
+        },
+        {
+          "flag": "--since/--until",
+          "desc": "时间区间过滤"
+        },
+        {
+          "flag": "--csv",
+          "desc": "导出 CSV 便于 Excel 分析"
+        }
+      ],
+      "pitfalls": [
+        "Windows 的 ctime 是「创建时间」，Linux 上是「inode 变更时间」，含义不同",
+        "不解析 NTFS 的双时间戳（那要直接读 MFT，见 deleted.py）",
+        "时间戳可被程序伪造，不能作为唯一证据"
+      ],
+      "next": [
+        "deleted",
+        "exiftool",
+        "volatility3"
+      ]
+    },
+    {
+      "id": "volatility3",
+      "category": "forensics",
+      "name": "Volatility 3",
+      "name_en": "Volatility 3",
+      "version": "2.28.2",
+      "type": "cli",
+      "path": "06-取证/volatility3/venv/Scripts/vol.exe",
+      "launch": {
+        "kind": "bat",
+        "target": "06-取证/volatility3/启动Volatility.bat",
+        "workdir": "06-取证/volatility3"
+      },
+      "summary": "内存镜像取证事实标准：进程、网络连接、注册表、凭据、文件系统全可挖。",
+      "when": "拿到 .raw/.mem/.vmem 内存镜像，或需要从内存里找 flag、密码、进程。",
+      "usage": [
+        {
+          "title": "识别镜像信息（第一步永远先跑）",
+          "code": "vol -f memory.raw windows.info"
+        },
+        {
+          "title": "列进程",
+          "code": "vol -f memory.raw windows.pslist"
+        },
+        {
+          "title": "进程树",
+          "code": "vol -f memory.raw windows.pstree"
+        },
+        {
+          "title": "网络连接",
+          "code": "vol -f memory.raw windows.netscan"
+        },
+        {
+          "title": "命令行历史",
+          "code": "vol -f memory.raw windows.cmdline"
+        },
+        {
+          "title": "扫文件",
+          "code": "vol -f memory.raw windows.filescan"
+        },
+        {
+          "title": "导出文件",
+          "code": "vol -f memory.raw windows.dumpfiles --virtaddr 0x..."
+        },
+        {
+          "title": "注册表",
+          "code": "vol -f memory.raw windows.registry.hivelist"
+        }
+      ],
+      "params": [
+        {
+          "flag": "-f",
+          "desc": "内存镜像文件"
+        },
+        {
+          "flag": "-o",
+          "desc": "输出目录"
+        },
+        {
+          "flag": "--cache-path",
+          "desc": "符号缓存目录（默认 APPDATA）"
+        },
+        {
+          "flag": "-u / --offline",
+          "desc": "允许/禁止联网下载符号表"
+        },
+        {
+          "flag": "--parallelism",
+          "desc": "并行模式 processes/threads/off"
+        }
+      ],
+      "pitfalls": [
+        "首次跑某系统版本会自动下载符号表，需要网络；离线环境要预置 symbols",
+        "APPDATA 不可写时用 --cache-path 指到可写目录（本机启动脚本已处理）",
+        "内存镜像动辄数 GB，插件跑得慢是正常的"
+      ],
+      "next": [
+        "binwalk"
+      ]
+    },
+    {
+      "id": "geoip",
+      "category": "osint",
+      "name": "IP 地理位置查询",
+      "name_en": "geoip.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "07-OSINT/scripts/geoip.py",
+      "launch": {
+        "kind": "script",
+        "target": "07-OSINT/scripts/geoip.bat"
+      },
+      "summary": "查 IP 的国家、城市、ISP、ASN：自动找本地 .mmdb 离线库，找不到才降级在线 API。",
+      "when": "有一批 IP 想知道它们在地理上分布在哪，或者想确认某个 IP 是不是来自某国。",
+      "usage": [
+        {
+          "title": "直接查（自动找本地库）",
+          "steps": [
+            "python -X utf8 geoip.py 114.114.114.114",
+            "脚本会先自动搜索本地 .mmdb（脚本附近、v2rayN/Clash 等常见目录）",
+            "找到就用离线库，找不到才联网；用了哪个会在 stderr 打一行说明"
+          ]
+        },
+        {
+          "title": "用本地离线库查（不外发数据）",
+          "code": "python -X utf8 geoip.py 8.8.8.8 --db GeoLite2-City.mmdb"
+        },
+        {
+          "title": "批量查一批 IP 并输出 JSON",
+          "code": "python -X utf8 geoip.py --batch ips.txt --db Country.mmdb --json"
+        },
+        {
+          "title": "先看库的元数据确认能用",
+          "code": "python -X utf8 geoip.py --db Country.mmdb --info"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--db",
+          "desc": "手动指定本地 .mmdb；不给则自动搜索"
+        },
+        {
+          "flag": "--api",
+          "desc": "在线接口：ip-api（默认）或 ipinfo"
+        },
+        {
+          "flag": "--batch",
+          "desc": "从文件批量读 IP，每行一个，# 开头为注释"
+        },
+        {
+          "flag": "--info",
+          "desc": "只打印 mmdb 元数据后退出"
+        },
+        {
+          "flag": "--timeout",
+          "desc": "在线请求超时秒数，默认 10"
+        },
+        {
+          "flag": "--delay",
+          "desc": "在线批量查询间隔，默认 1.5 秒"
+        }
+      ],
+      "pitfalls": [
+        "自动搜索只查有限位置（脚本同目录及上 3 级、v2rayN/v2rayA/Clash 等常见客户端目录），不做全盘扫描。想指定就用 --db 或设环境变量 GEOIP_MMDB。",
+        "mmdb 是二进制格式，标准库没有解析器，脚本自己实现了读取；只支持 MaxMind 的 .mmdb，IP2Location 的 .bin 和纯真库的 .dat 一律不支持，会明确报错而不是硬猜。",
+        "GeoLite2-Country 库里只有国家和少量大洲信息，查不到城市、经纬度是正常的（没这个数据，不是解析失败）；要城市级信息得用 GeoLite2-City。",
+        "本地库也找不到时，会把要查的 IP 发给 ip-api.com / ipinfo.io 这类第三方，敏感目标请自备离线库；脚本运行前会往 stderr 打一行警告。",
+        "内网/保留地址（10.x、192.168.x、127.x）在任何 GeoIP 库里都是查不到的，脚本会直接说明而不去调在线 API 浪费额度。",
+        "IP 地理位置是「注册地/出口地」不是「人在哪」，用代理或 CDN 时完全不准，CTF 里只能当线索不能当证据。"
+      ],
+      "next": [
+        "nmap",
+        "wireshark",
+        "theharvester"
+      ]
+    },
+    {
+      "id": "shodanparse",
+      "category": "osint",
+      "name": "Shodan/FOFA 导出解析",
+      "name_en": "shodanparse.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "07-OSINT/scripts/shodanparse.py",
+      "launch": {
+        "kind": "script",
+        "target": "07-OSINT/scripts/shodanparse.bat"
+      },
+      "summary": "离线统计 Shodan、FOFA 导出的资产表：端口、国家、产品、CVE、证书主体分布，可按端口或 CVE 过滤。",
+      "when": "题目或渗透测试给了 Shodan/FOFA 导出的 JSON，需要快速看清资产面而不是一条条翻。",
+      "usage": [
+        {
+          "title": "看整体资产画像",
+          "code": "python -X utf8 shodanparse.py shodan.json --top 15"
+        },
+        {
+          "title": "筛出开了 22 端口的主机并导出 CSV",
+          "code": "python -X utf8 shodanparse.py export.json --port 22 --csv -o hosts.csv"
+        },
+        {
+          "title": "查哪些主机受某 CVE 影响",
+          "code": "python -X utf8 shodanparse.py export.json --cve CVE-2021-44228"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--port",
+          "desc": "按端口过滤，支持单值或范围如 80,443,8000-8100"
+        },
+        {
+          "flag": "--cve",
+          "desc": "按 CVE 编号过滤，只留 vulns 里含该编号的主机"
+        },
+        {
+          "flag": "--csv",
+          "desc": "导出 CSV（Excel 可直接打开，带 BOM 不乱码）"
+        },
+        {
+          "flag": "--hosts",
+          "desc": "只列出主机清单（IP/端口/产品）"
+        },
+        {
+          "flag": "--json",
+          "desc": "输出结构化 JSON"
+        },
+        {
+          "flag": "--top",
+          "desc": "分布榜取前 N 条，默认 15"
+        }
+      ],
+      "pitfalls": [
+        "Shodan 导出有三种形态：JSON 数组、JSONL（每行一个对象）、以及带 matches 包装的字典；格式不对会直接报错并提示是哪一种，别手工改文件。",
+        "FOFA 的导出是 fields 数组加 results 二维数组，字段顺序由 fields 决定，脚本会按 fields 建映射；改了 fields 顺序仍能正确解析，但删掉字段会导致对应列为空。",
+        "vulns 字段是「CVE 编号 → 详情」的字典，只出现在付费账号的导出里；免费账号没有这个字段，所以 --cve 查不到不代表没有漏洞。",
+        "同一 IP 的多个端口算多条记录，统计主机数要看「独立主机」而不是「记录数」，否则会高估资产规模。"
+      ],
+      "next": [
+        "nmap",
+        "theharvester",
+        "cyberchef"
+      ]
+    },
+    {
+      "id": "socmint",
+      "category": "osint",
+      "name": "用户名跨平台核查",
+      "name_en": "socmint.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "07-OSINT/scripts/socmint.py",
+      "launch": {
+        "kind": "script",
+        "target": "07-OSINT/scripts/socmint.bat"
+      },
+      "summary": "查一个用户名在 GitHub、GitLab、Reddit、Keybase、npm 等平台是否注册过。",
+      "when": "CTF 里拿到一个昵称或 ID，想快速知道这个人在哪些技术平台留过痕迹。",
+      "usage": [
+        {
+          "title": "查全部平台",
+          "code": "python -X utf8 socmint.py someuser"
+        },
+        {
+          "title": "只查能给出确定结论的几个",
+          "code": "python -X utf8 socmint.py someuser --sites github,gitlab,keybase,npm --json"
+        },
+        {
+          "title": "先看支持哪些平台",
+          "code": "python -X utf8 socmint.py --list"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--sites",
+          "desc": "逗号分隔的平台名，默认全部（--list 可看名字）"
+        },
+        {
+          "flag": "--timeout",
+          "desc": "单次请求超时秒数，默认 8"
+        },
+        {
+          "flag": "--delay",
+          "desc": "平台间隔秒数，默认 1.0，不能小于 1.0"
+        },
+        {
+          "flag": "--json",
+          "desc": "输出结构化 JSON"
+        },
+        {
+          "flag": "--list",
+          "desc": "列出支持的平台后退出"
+        },
+        {
+          "flag": "-o/--output",
+          "desc": "写入文件，已存在需加 --force"
+        }
+      ],
+      "pitfalls": [
+        "Twitter/X、Instagram、Telegram 未登录时对「任意用户名」都返回 200 或跳登录页，靠状态码必然误判；脚本对这三个平台只报「不确定」，这是故意的，别当成漏报去改代码。",
+        "三种状态要分清：存在、不存在、不确定（被限流/超时/平台无法区分）。「不确定」不等于「没有这个人」。",
+        "GitHub 匿名 API 每小时只有 60 次额度，批量查会 403；此时脚本报「不确定」而不是「不存在」。",
+        "npm 没有公开的查用户接口（官方 /-/user/ 端点恒回 401），脚本改查「该用户名是不是某个包的维护者」，因此从不发包的用户查不到，会显示不存在。",
+        "平台之间有强制 1 秒间隔且串行执行，查满 10 个平台至少要 10 秒以上，慢是正常的（避免被封）。",
+        "同名不等于同一个人，结论必须结合其他线索；本脚本仅用于公开信息查询，不要用于骚扰或跟踪他人。"
+      ],
+      "next": [
+        "theharvester",
+        "nmap",
+        "wireshark"
       ]
     },
     {
@@ -1261,6 +2963,64 @@
         "仅用于公开信息收集与授权场景"
       ],
       "next": []
+    },
+    {
+      "id": "whois",
+      "category": "osint",
+      "name": "域名/IP 归属查询",
+      "name_en": "whois.py",
+      "version": "1.0",
+      "type": "script",
+      "path": "07-OSINT/scripts/whois.py",
+      "launch": {
+        "kind": "script",
+        "target": "07-OSINT/scripts/whois.bat"
+      },
+      "summary": "查域名或 IP 的注册人、注册商、注册/到期时间，支持 WHOIS 与 RDAP 双通道和 ASN 归属。",
+      "when": "题目给了一个域名或 IP，想知道它属于谁、什么时候注册的、解析到哪个网段。",
+      "usage": [
+        {
+          "title": "查域名注册信息",
+          "code": "python -X utf8 whois.py example.com"
+        },
+        {
+          "title": "查 IP 的归属网段与 ASN",
+          "code": "python -X utf8 whois.py 8.8.8.8"
+        },
+        {
+          "title": "WHOIS 被墙时改走 RDAP",
+          "code": "python -X utf8 whois.py example.com --rdap --json"
+        }
+      ],
+      "params": [
+        {
+          "flag": "--rdap",
+          "desc": "改用 HTTPS 的 RDAP 接口（TCP 43 被防火墙拦时用这个）"
+        },
+        {
+          "flag": "--json",
+          "desc": "输出结构化 JSON，方便后续脚本处理"
+        },
+        {
+          "flag": "--timeout",
+          "desc": "单次查询超时秒数，默认 10"
+        },
+        {
+          "flag": "-o/--output",
+          "desc": "写入文件，已存在需加 --force"
+        }
+      ],
+      "pitfalls": [
+        "很多网络环境会封掉 TCP 43 端口，此时纯 WHOIS 必然超时；先用 --rdap 试，RDAP 走 443 通常能通。",
+        "WHOIS 返回的注册人信息绝大多数已被 GDPR 打码成 REDACTED FOR PRIVACY，查不到真人姓名是正常的，别以为是脚本坏了。",
+        "IP 的 whois 要逐级查（IANA → RIR → 分配到的组织），只看第一跳会误以为整个网段都归 IANA。",
+        "返回文本是「键: 值」的自由格式，不同注册商字段名不统一，脚本只能提取常见字段，完整内容要看原文。"
+      ],
+      "next": [
+        "theharvester",
+        "nmap",
+        "wireshark"
+      ]
     }
   ]
 }

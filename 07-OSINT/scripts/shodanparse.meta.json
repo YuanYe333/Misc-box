@@ -1,0 +1,59 @@
+{
+  "id": "shodanparse",
+  "category": "osint",
+  "name": "Shodan/FOFA 导出解析",
+  "name_en": "shodanparse.py",
+  "summary": "离线统计 Shodan、FOFA 导出的资产表：端口、国家、产品、CVE、证书主体分布，可按端口或 CVE 过滤。",
+  "when": "题目或渗透测试给了 Shodan/FOFA 导出的 JSON，需要快速看清资产面而不是一条条翻。",
+  "usage": [
+    {
+      "title": "看整体资产画像",
+      "code": "python -X utf8 shodanparse.py shodan.json --top 15"
+    },
+    {
+      "title": "筛出开了 22 端口的主机并导出 CSV",
+      "code": "python -X utf8 shodanparse.py export.json --port 22 --csv -o hosts.csv"
+    },
+    {
+      "title": "查哪些主机受某 CVE 影响",
+      "code": "python -X utf8 shodanparse.py export.json --cve CVE-2021-44228"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--port",
+      "desc": "按端口过滤，支持单值或范围如 80,443,8000-8100"
+    },
+    {
+      "flag": "--cve",
+      "desc": "按 CVE 编号过滤，只留 vulns 里含该编号的主机"
+    },
+    {
+      "flag": "--csv",
+      "desc": "导出 CSV（Excel 可直接打开，带 BOM 不乱码）"
+    },
+    {
+      "flag": "--hosts",
+      "desc": "只列出主机清单（IP/端口/产品）"
+    },
+    {
+      "flag": "--json",
+      "desc": "输出结构化 JSON"
+    },
+    {
+      "flag": "--top",
+      "desc": "分布榜取前 N 条，默认 15"
+    }
+  ],
+  "pitfalls": [
+    "Shodan 导出有三种形态：JSON 数组、JSONL（每行一个对象）、以及带 matches 包装的字典；格式不对会直接报错并提示是哪一种，别手工改文件。",
+    "FOFA 的导出是 fields 数组加 results 二维数组，字段顺序由 fields 决定，脚本会按 fields 建映射；改了 fields 顺序仍能正确解析，但删掉字段会导致对应列为空。",
+    "vulns 字段是「CVE 编号 → 详情」的字典，只出现在付费账号的导出里；免费账号没有这个字段，所以 --cve 查不到不代表没有漏洞。",
+    "同一 IP 的多个端口算多条记录，统计主机数要看「独立主机」而不是「记录数」，否则会高估资产规模。"
+  ],
+  "next": [
+    "nmap",
+    "theharvester",
+    "cyberchef"
+  ]
+}

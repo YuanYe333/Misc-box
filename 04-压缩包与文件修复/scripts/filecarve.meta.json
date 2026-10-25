@@ -1,0 +1,46 @@
+{
+  "id": "filecarve",
+  "category": "archive",
+  "name": "文件雕取",
+  "name_en": "filecarve.py",
+  "summary": "从裸数据里按魔数找出内嵌文件并切出来（binwalk 的轻量替代）。",
+  "when": "镜像文件、内存转储、图片尾部疑似藏了 ZIP/PNG。",
+  "usage": [
+    {
+      "title": "先扫描看有什么",
+      "code": "python -X utf8 filecarve.py 镜像.bin"
+    },
+    {
+      "title": "实际切出来",
+      "code": "python -X utf8 filecarve.py 镜像.bin -o 输出目录"
+    },
+    {
+      "title": "只看尾部附加数据",
+      "code": "python -X utf8 filecarve.py 图片.png --tail"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-o",
+      "desc": "把雕出的文件写到这个目录"
+    },
+    {
+      "flag": "--tail",
+      "desc": "只显示第一个文件结束之后的附加数据"
+    },
+    {
+      "flag": "--min-size",
+      "desc": "小于这个字节数的片段不雕（默认 16）"
+    }
+  ],
+  "pitfalls": [
+    "只雕自带明确结束标记的格式（PNG/JPG/GIF/ZIP/PDF 等）",
+    "没有长度字段又没结束标记的（如原始 PE 段）只报位置不雕",
+    "一个文件被分成两段时会各雕一半，需要人工拼接"
+  ],
+  "next": [
+    "binwalk",
+    "foremost",
+    "7zip"
+  ]
+}

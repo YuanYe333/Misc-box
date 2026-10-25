@@ -1,0 +1,49 @@
+{
+  "id": "stegodetect",
+  "category": "stego",
+  "name": "隐写总检",
+  "name_en": "stegodetect.py",
+  "summary": "一键盘查 PNG/JPEG/BMP/ZIP 的尾部附加、异常块、尺寸不符、内嵌文件和明文 flag，按可信度排序。",
+  "when": "拿到一个可疑文件但不知道该往哪个方向查，先跑这个把明显的隐写痕迹全列出来。",
+  "usage": [
+    {
+      "title": "先全检一遍",
+      "steps": [
+        "python -X utf8 stegodetect.py 题目.png",
+        "结果按 [高]/[中]/[低] 排序，先只看 [高] 那几条",
+        "如果报了「IEND 之后有附加数据」，用 --tail-dump 把那一段单独存出来再分析"
+      ]
+    },
+    {
+      "title": "两图对比找改动点",
+      "steps": [
+        "python -X utf8 stegodetect.py --diff 原图.png 改过.png -o 差异.png",
+        "差异图会把不同像素放大 32 倍并标红，改动区域一眼可见",
+        "输出里会写明最大通道差；差 1 通常就是 LSB 级改动"
+      ]
+    },
+    {
+      "title": "整目录扫一遍",
+      "code": "python -X utf8 stegodetect.py 附件目录/ -r"
+    },
+    {
+      "title": "导出尾部数据",
+      "code": "python -X utf8 stegodetect.py 题目.png --tail-dump -o tail.bin"
+    }
+  ],
+  "params": [
+    {"flag": "-r", "desc": "递归子目录"},
+    {"flag": "--diff A B", "desc": "两张同尺寸图做像素级对比，输出差异图"},
+    {"flag": "--tail-dump", "desc": "把容器尾部（IEND/EOI 之后）的附加数据导出成文件"},
+    {"flag": "-o", "desc": "输出文件（配合 --diff / --tail-dump）"},
+    {"flag": "--no-amplify", "desc": "差异图不放大，只按原始差值画"},
+    {"flag": "-v", "desc": "详细输出，含更多数据预览"}
+  ],
+  "pitfalls": [
+    "「没有发现明显异常」不等于没有隐写。本脚本查的是容器层面的痕迹（尾部数据、块异常、尺寸不符、内嵌文件），LSB 隐写、频域隐写这类内容级手法不会留下任何结构痕迹，必须再用 lsb.py 或 stegsolve 看。",
+    "JPEG 天然存在多个 APP 段和 COM 段，数量多不代表有问题；脚本把 APP 段数量作为「低」优先级提示，别把它当成结论。",
+    "PNG 声明的像素数据比实际少，可能是出题人改了 IHDR 宽度或高度（常见手法），也可能只是编码器优化。判据是差值大小和尾部是否紧接数据，脚本会给出具体字节数让你自己判断。",
+    "两图对比要求尺寸完全一致。尺寸不同时脚本直接报错，因为那本身就是线索（出题人裁过图），别急着去 resize。"
+  ],
+  "next": ["stegsolve", "binwalk", "foremost"]
+}

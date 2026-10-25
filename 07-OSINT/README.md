@@ -141,6 +141,10 @@ curl.exe -sSI https://example.com
 | 工具 | 版本 | 一句话说明 |
 | --- | --- | --- |
 | [theHarvester](#theharvester) | 4.11.1 | 从公开来源收集域名相关的邮箱、子域、主机、员工名。 |
+| [IP 地理位置查询](#geoip) | 1.0 | IP 归属地查询，优先本地 mmdb，离线不外传。 |
+| [Shodan/FOFA 导出解析](#shodanparse) | 1.0 | Shodan/FOFA 导出离线聚合：端口、国家、产品、CVE。 |
+| [用户名跨平台核查](#socmint) | 1.0 | 跨平台用户名存在性核查，不确定时如实标注。 |
+| [域名/IP 归属查询](#whois) | 1.0 | 域名/IP 注册信息查询，支持离线解析 whois 存档。 |
 
 ---
 
@@ -196,5 +200,218 @@ theHarvester -d example.com -b duckduckgo -f 结果
 
 ---
 
+
+<a id="geoip"></a>
+
+## IP 地理位置查询 · geoip.py
+
+**类型**：script  
+**位置**：`07-OSINT/scripts/geoip.py`
+
+> 查 IP 的国家、城市、ISP、ASN：自动找本地 .mmdb 离线库，找不到才降级在线 API。
+
+### 什么时候用
+
+有一批 IP 想知道它们在地理上分布在哪，或者想确认某个 IP 是不是来自某国。
+
+### 怎么用
+
+**用本地离线库查（不外发数据）**
+
+```bat
+python -X utf8 geoip.py 8.8.8.8 --db GeoLite2-City.mmdb
+```
+
+**批量查一批 IP 并输出 JSON**
+
+```bat
+python -X utf8 geoip.py --batch ips.txt --db Country.mmdb --json
+```
+
+**先看库的元数据确认能用**
+
+```bat
+python -X utf8 geoip.py --db Country.mmdb --info
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--db` | 本地 MaxMind .mmdb 路径，给了就走离线（推荐） |
+| `--api` | 在线接口：ip-api（默认）或 ipinfo |
+| `--batch` | 从文件批量读 IP，每行一个，# 开头为注释 |
+| `--info` | 只打印 mmdb 元数据后退出 |
+| `--timeout` | 在线请求超时秒数，默认 10 |
+| `--delay` | 在线批量查询间隔，默认 1.5 秒 |
+
+### 踩坑提醒
+
+- mmdb 是二进制格式，标准库没有解析器，脚本自己实现了读取；只支持 MaxMind 的 .mmdb，IP2Location 的 .bin 和纯真库的 .dat 一律不支持，会明确报错而不是硬猜。
+- GeoLite2-Country 库里只有国家和少量大洲信息，查不到城市、经纬度是正常的（没这个数据，不是解析失败）；要城市级信息得用 GeoLite2-City。
+- 不带 --db 时会把要查的 IP 发给 ip-api.com / ipinfo.io 这类第三方，敏感目标请自备离线库；脚本运行前会往 stderr 打一行警告。
+- 内网/保留地址（10.x、192.168.x、127.x）在任何 GeoIP 库里都是查不到的，脚本会直接说明而不去调在线 API 浪费额度。
+- IP 地理位置是「注册地/出口地」不是「人在哪」，用代理或 CDN 时完全不准，CTF 里只能当线索不能当证据。
+
+---
+
+<a id="shodanparse"></a>
+
+## Shodan/FOFA 导出解析 · shodanparse.py
+
+**类型**：script  
+**位置**：`07-OSINT/scripts/shodanparse.py`
+
+> 离线统计 Shodan、FOFA 导出的资产表：端口、国家、产品、CVE、证书主体分布，可按端口或 CVE 过滤。
+
+### 什么时候用
+
+题目或渗透测试给了 Shodan/FOFA 导出的 JSON，需要快速看清资产面而不是一条条翻。
+
+### 怎么用
+
+**看整体资产画像**
+
+```bat
+python -X utf8 shodanparse.py shodan.json --top 15
+```
+
+**筛出开了 22 端口的主机并导出 CSV**
+
+```bat
+python -X utf8 shodanparse.py export.json --port 22 --csv -o hosts.csv
+```
+
+**查哪些主机受某 CVE 影响**
+
+```bat
+python -X utf8 shodanparse.py export.json --cve CVE-2021-44228
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--port` | 按端口过滤，支持单值或范围如 80,443,8000-8100 |
+| `--cve` | 按 CVE 编号过滤，只留 vulns 里含该编号的主机 |
+| `--csv` | 导出 CSV（Excel 可直接打开，带 BOM 不乱码） |
+| `--hosts` | 只列出主机清单（IP/端口/产品） |
+| `--json` | 输出结构化 JSON |
+| `--top` | 分布榜取前 N 条，默认 15 |
+
+### 踩坑提醒
+
+- Shodan 导出有三种形态：JSON 数组、JSONL（每行一个对象）、以及带 matches 包装的字典；格式不对会直接报错并提示是哪一种，别手工改文件。
+- FOFA 的导出是 fields 数组加 results 二维数组，字段顺序由 fields 决定，脚本会按 fields 建映射；改了 fields 顺序仍能正确解析，但删掉字段会导致对应列为空。
+- vulns 字段是「CVE 编号 → 详情」的字典，只出现在付费账号的导出里；免费账号没有这个字段，所以 --cve 查不到不代表没有漏洞。
+- 同一 IP 的多个端口算多条记录，统计主机数要看「独立主机」而不是「记录数」，否则会高估资产规模。
+
+---
+
+<a id="socmint"></a>
+
+## 用户名跨平台核查 · socmint.py
+
+**类型**：script  
+**位置**：`07-OSINT/scripts/socmint.py`
+
+> 查一个用户名在 GitHub、GitLab、Reddit、Keybase、npm 等平台是否注册过。
+
+### 什么时候用
+
+CTF 里拿到一个昵称或 ID，想快速知道这个人在哪些技术平台留过痕迹。
+
+### 怎么用
+
+**查全部平台**
+
+```bat
+python -X utf8 socmint.py someuser
+```
+
+**只查能给出确定结论的几个**
+
+```bat
+python -X utf8 socmint.py someuser --sites github,gitlab,keybase,npm --json
+```
+
+**先看支持哪些平台**
+
+```bat
+python -X utf8 socmint.py --list
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--sites` | 逗号分隔的平台名，默认全部（--list 可看名字） |
+| `--timeout` | 单次请求超时秒数，默认 8 |
+| `--delay` | 平台间隔秒数，默认 1.0，不能小于 1.0 |
+| `--json` | 输出结构化 JSON |
+| `--list` | 列出支持的平台后退出 |
+| `-o/--output` | 写入文件，已存在需加 --force |
+
+### 踩坑提醒
+
+- Twitter/X、Instagram、Telegram 未登录时对「任意用户名」都返回 200 或跳登录页，靠状态码必然误判；脚本对这三个平台只报「不确定」，这是故意的，别当成漏报去改代码。
+- 三种状态要分清：存在、不存在、不确定（被限流/超时/平台无法区分）。「不确定」不等于「没有这个人」。
+- GitHub 匿名 API 每小时只有 60 次额度，批量查会 403；此时脚本报「不确定」而不是「不存在」。
+- npm 没有公开的查用户接口（官方 /-/user/ 端点恒回 401），脚本改查「该用户名是不是某个包的维护者」，因此从不发包的用户查不到，会显示不存在。
+- 平台之间有强制 1 秒间隔且串行执行，查满 10 个平台至少要 10 秒以上，慢是正常的（避免被封）。
+- 同名不等于同一个人，结论必须结合其他线索；本脚本仅用于公开信息查询，不要用于骚扰或跟踪他人。
+
+---
+
+<a id="whois"></a>
+
+## 域名/IP 归属查询 · whois.py
+
+**类型**：script  
+**位置**：`07-OSINT/scripts/whois.py`
+
+> 查域名或 IP 的注册人、注册商、注册/到期时间，支持 WHOIS 与 RDAP 双通道和 ASN 归属。
+
+### 什么时候用
+
+题目给了一个域名或 IP，想知道它属于谁、什么时候注册的、解析到哪个网段。
+
+### 怎么用
+
+**查域名注册信息**
+
+```bat
+python -X utf8 whois.py example.com
+```
+
+**查 IP 的归属网段与 ASN**
+
+```bat
+python -X utf8 whois.py 8.8.8.8
+```
+
+**WHOIS 被墙时改走 RDAP**
+
+```bat
+python -X utf8 whois.py example.com --rdap --json
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--rdap` | 改用 HTTPS 的 RDAP 接口（TCP 43 被防火墙拦时用这个） |
+| `--json` | 输出结构化 JSON，方便后续脚本处理 |
+| `--timeout` | 单次查询超时秒数，默认 10 |
+| `-o/--output` | 写入文件，已存在需加 --force |
+
+### 踩坑提醒
+
+- 很多网络环境会封掉 TCP 43 端口，此时纯 WHOIS 必然超时；先用 --rdap 试，RDAP 走 443 通常能通。
+- WHOIS 返回的注册人信息绝大多数已被 GDPR 打码成 REDACTED FOR PRIVACY，查不到真人姓名是正常的，别以为是脚本坏了。
+- IP 的 whois 要逐级查（IANA → RIR → 分配到的组织），只看第一跳会误以为整个网段都归 IANA。
+- 返回文本是「键: 值」的自由格式，不同注册商字段名不统一，脚本只能提取常见字段，完整内容要看原文。
+
+---
 
 ← 返回 [工具箱总览](../README.md)

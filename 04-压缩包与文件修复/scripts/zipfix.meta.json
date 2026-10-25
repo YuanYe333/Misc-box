@@ -1,0 +1,42 @@
+{
+  "id": "zipfix",
+  "category": "archive",
+  "name": "ZIP 结构体检",
+  "name_en": "zipfix.py",
+  "summary": "逐条对账 ZIP 的中央目录/CRC/大小字段，能重建被删的中央目录。",
+  "when": "解压报「压缩包已损坏」，或中央目录被截断、条目偏移错乱。",
+  "usage": [
+    {
+      "title": "只体检",
+      "code": "python -X utf8 zipfix.py 坏包.zip"
+    },
+    {
+      "title": "重建中央目录",
+      "code": "python -X utf8 zipfix.py 坏包.zip --rebuild -o 重建.zip"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-o",
+      "desc": "修复后另存为这个文件"
+    },
+    {
+      "flag": "--rebuild",
+      "desc": "按本地文件头重建中央目录"
+    },
+    {
+      "flag": "--force",
+      "desc": "允许覆盖已存在的输出文件"
+    }
+  ],
+  "pitfalls": [
+    "不处理 ZIP64（超过 4GB 的包）",
+    "数据区本身被破坏（压缩流残缺）无法还原，只能报告受影响条目",
+    "重建只能恢复结构，恢复不了被覆盖的数据"
+  ],
+  "next": [
+    "fakeenc",
+    "7zip",
+    "filetype"
+  ]
+}

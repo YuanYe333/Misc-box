@@ -1,0 +1,69 @@
+{
+  "id": "geoip",
+  "category": "osint",
+  "name": "IP 地理位置查询",
+  "name_en": "geoip.py",
+  "summary": "查 IP 的国家、城市、ISP、ASN：自动找本地 .mmdb 离线库，找不到才降级在线 API。",
+  "when": "有一批 IP 想知道它们在地理上分布在哪，或者想确认某个 IP 是不是来自某国。",
+  "usage": [
+    {
+      "title": "直接查（自动找本地库）",
+      "steps": [
+        "python -X utf8 geoip.py 114.114.114.114",
+        "脚本会先自动搜索本地 .mmdb（脚本附近、v2rayN/Clash 等常见目录）",
+        "找到就用离线库，找不到才联网；用了哪个会在 stderr 打一行说明"
+      ]
+    },
+    {
+      "title": "用本地离线库查（不外发数据）",
+      "code": "python -X utf8 geoip.py 8.8.8.8 --db GeoLite2-City.mmdb"
+    },
+    {
+      "title": "批量查一批 IP 并输出 JSON",
+      "code": "python -X utf8 geoip.py --batch ips.txt --db Country.mmdb --json"
+    },
+    {
+      "title": "先看库的元数据确认能用",
+      "code": "python -X utf8 geoip.py --db Country.mmdb --info"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--db",
+      "desc": "手动指定本地 .mmdb；不给则自动搜索"
+    },
+    {
+      "flag": "--api",
+      "desc": "在线接口：ip-api（默认）或 ipinfo"
+    },
+    {
+      "flag": "--batch",
+      "desc": "从文件批量读 IP，每行一个，# 开头为注释"
+    },
+    {
+      "flag": "--info",
+      "desc": "只打印 mmdb 元数据后退出"
+    },
+    {
+      "flag": "--timeout",
+      "desc": "在线请求超时秒数，默认 10"
+    },
+    {
+      "flag": "--delay",
+      "desc": "在线批量查询间隔，默认 1.5 秒"
+    }
+  ],
+  "pitfalls": [
+    "自动搜索只查有限位置（脚本同目录及上 3 级、v2rayN/v2rayA/Clash 等常见客户端目录），不做全盘扫描。想指定就用 --db 或设环境变量 GEOIP_MMDB。",
+    "mmdb 是二进制格式，标准库没有解析器，脚本自己实现了读取；只支持 MaxMind 的 .mmdb，IP2Location 的 .bin 和纯真库的 .dat 一律不支持，会明确报错而不是硬猜。",
+    "GeoLite2-Country 库里只有国家和少量大洲信息，查不到城市、经纬度是正常的（没这个数据，不是解析失败）；要城市级信息得用 GeoLite2-City。",
+    "本地库也找不到时，会把要查的 IP 发给 ip-api.com / ipinfo.io 这类第三方，敏感目标请自备离线库；脚本运行前会往 stderr 打一行警告。",
+    "内网/保留地址（10.x、192.168.x、127.x）在任何 GeoIP 库里都是查不到的，脚本会直接说明而不去调在线 API 浪费额度。",
+    "IP 地理位置是「注册地/出口地」不是「人在哪」，用代理或 CDN 时完全不准，CTF 里只能当线索不能当证据。"
+  ],
+  "next": [
+    "nmap",
+    "wireshark",
+    "theharvester"
+  ]
+}

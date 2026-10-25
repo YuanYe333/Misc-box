@@ -1,0 +1,65 @@
+{
+  "id": "dnsdump",
+  "category": "traffic",
+  "name": "DNS 导出与隧道识别",
+  "name_en": "dnsdump.py",
+  "summary": "导出 pcap 里的 DNS 查询/响应，按超长子域名、编码标签、高频、TXT 异常打分找隧道，并能把隧道数据拼回来自动解码。",
+  "when": "DNS 隧道题：域名一长串、查询量巨大、TXT 记录可疑，需要批量导出、定位可疑项并把隐藏数据还原出来时。",
+  "usage": [
+    {
+      "title": "一步到位：拼接+解码（最常用）",
+      "steps": [
+        "python -X utf8 dnsdump.py 题目.pcap --decode",
+        "脚本按根域名和编码类型分组拼接，自动试 base32/base64/hex"
+      ]
+    },
+    {
+      "title": "先看聚合再抓可疑",
+      "steps": [
+        "python -X utf8 dnsdump.py 题目.pcap --stats",
+        "python -X utf8 dnsdump.py 题目.pcap --tunnel"
+      ]
+    },
+    {
+      "title": "导出 CSV",
+      "code": "python -X utf8 dnsdump.py 题目.pcap --csv -o dns.csv"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--decode",
+      "desc": "把可疑标签按根域名+编码类型分组拼接，自动解码（找 flag 首选）"
+    },
+    {
+      "flag": "--tunnel",
+      "desc": "只输出隧道嫌疑分达标的项"
+    },
+    {
+      "flag": "--threshold N",
+      "desc": "调整可疑阈值，默认 4.0，调低会更敏感"
+    },
+    {
+      "flag": "--stats",
+      "desc": "按根域名输出查询/响应/NXDOMAIN 聚合表"
+    },
+    {
+      "flag": "--csv",
+      "desc": "输出 CSV，便于丢进 Excel 或脚本二次处理"
+    },
+    {
+      "flag": "-o FILE",
+      "desc": "写入文件，已存在需 --force"
+    }
+  ],
+  "pitfalls": [
+    "隧道分是启发式打分，会误报；分数高只代表「值得看一眼」，不是判决",
+    "同一域名下可能混有 base32 和 base64 两类数据，--decode 已按类型分开拼接，不要手动混拼",
+    "只认端口 53 的标准 DNS，mDNS(5353)/LLMNR/DoH/DoT 一个都不处理",
+    "DNS over TCP 只拼接同一四元组的分段，跨连接的长报文可能解不全"
+  ],
+  "next": [
+    "wireshark",
+    "tshark",
+    "cyberchef"
+  ]
+}

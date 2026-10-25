@@ -1,0 +1,56 @@
+{
+  "id": "hashcrack",
+  "category": "code",
+  "name": "哈希识别与爆破",
+  "name_en": "hashcrack.py",
+  "summary": "先认出这串哈希是什么算法，再用内置弱口令表/字典/掩码把它撞出来，全程离线。",
+  "when": "题目给了一串 32/40/64/128 位十六进制要还原明文；或者拿到 /etc/shadow、Windows SAM 里的哈希要撞密码。",
+  "usage": [
+    {
+      "title": "先只识别",
+      "steps": [
+        "python -X utf8 hashcrack.py 5f4dcc3b5aa765d61d8327deb882cf99",
+        "脚本按长度和格式特征给出候选算法，并说明判据",
+        "长度 32 的会明确提示「无法只凭长度区分 MD5/NTLM/MD4」"
+      ]
+    },
+    {
+      "title": "用内置弱口令表撞",
+      "code": "python -X utf8 hashcrack.py 5f4dcc3b5aa765d61d8327deb882cf99 --builtin"
+    },
+    {
+      "title": "用外部字典",
+      "code": "python -X utf8 hashcrack.py <hash> -w rockyou.txt"
+    },
+    {
+      "title": "掩码穷举（知道格式）",
+      "code": "python -X utf8 hashcrack.py <hash> --mask 'flag{?l?l?d?d}'"
+    },
+    {
+      "title": "只识别不爆破 / 看支持的算法",
+      "steps": [
+        "python -X utf8 hashcrack.py <hash> --identify",
+        "python -X utf8 hashcrack.py --list-algos"
+      ]
+    }
+  ],
+  "params": [
+    {"flag": "--builtin", "desc": "用内置弱口令表（约 300 条常用口令，含 flag/ctf/key 一类）"},
+    {"flag": "-w / --wordlist", "desc": "外部字典文件，每行一个候选"},
+    {"flag": "--mask", "desc": "掩码穷举：?l 小写 ?u 大写 ?d 数字 ?s 符号 ?a 全部 ?b 小写+数字 ?h 小写hex ?H 大写hex ?x 混合hex"},
+    {"flag": "--algo", "desc": "只按指定算法试"},
+    {"flag": "--limit", "desc": "字典最多试 N 条"},
+    {"flag": "--identify", "desc": "只识别不爆破"},
+    {"flag": "--list-algos", "desc": "列出支持的算法"},
+    {"flag": "--quiet", "desc": "只输出结果"}
+  ],
+  "pitfalls": [
+    "掩码组合数上限 500 万，超过直接拒绝。?a 是 62 个字符，?a?a?a?a?a 就有 9.1 亿，别手滑写长了——先算组合数再跑。",
+    "bcrypt / Argon2 / MD5-crypt / SHA256-crypt / SHA512-crypt / PBKDF2 / SSHA 只做识别，不爆破。这些是故意设计成慢哈希的，纯 Python 撞一条要几百毫秒，跑字典等于等一天；请用 hashcat / john 配 GPU。",
+    "32 位十六进制无法只凭长度区分 MD5 / NTLM / MD4，脚本默认三个都试。如果三个都撞不出来，可能是带盐的 MD5（md5($salt.$pass)），本工具不处理带盐格式。",
+    "NTLM 是 MD4(UTF-16LE(密码))，标准库没有 MD4，脚本自带了一份纯 Python 实现（已用 RFC 1320 的 6 个标准向量验证）。但纯 Python MD4 比 hashlib 慢很多，字典超过 10 万条时会明显变慢。",
+    "内置弱口令表是「小而精」，只有约 300 条，覆盖的是 CTF 最常见的弱口令。真实场景请用 rockyou.txt（1400 万条），但纯 Python 跑完要很久。",
+    "识别只是候选，不是断言。看到 SHA256 也可能是 SHA3-256 或 Keccak-256——三者对同一输入输出不同，撞不出来时用 --algo 换一个再试。"
+  ],
+  "next": ["encscan", "strings", "john"]
+}

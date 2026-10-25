@@ -1,0 +1,46 @@
+{
+  "id": "deleted",
+  "category": "forensics",
+  "name": "NTFS 已删除文件枚举",
+  "name_en": "deleted.py",
+  "summary": "直接解析 $MFT，列出已删除但记录还在的文件名/大小/时间。",
+  "when": "取证要查「这个盘上原来有什么、被删了什么」。",
+  "usage": [
+    {
+      "title": "读卷（需管理员）",
+      "code": "python -X utf8 deleted.py --drive D"
+    },
+    {
+      "title": "解析 MFT 镜像",
+      "code": "python -X utf8 deleted.py --mft MFT.dd --csv 已删除.csv"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--drive",
+      "desc": "盘符，如 D（需管理员权限）"
+    },
+    {
+      "flag": "--mft",
+      "desc": "MFT 镜像文件"
+    },
+    {
+      "flag": "--csv",
+      "desc": "输出 CSV"
+    },
+    {
+      "flag": "--all",
+      "desc": "连在用的记录一起列出"
+    }
+  ],
+  "pitfalls": [
+    "--drive 需要管理员权限，否则明确报错",
+    "只列出记录，不恢复数据；能否恢复取决于数据簇是否被覆盖",
+    "只支持 NTFS，FAT/exFAT 不适用"
+  ],
+  "next": [
+    "volatility3",
+    "foremost",
+    "exiftool"
+  ]
+}

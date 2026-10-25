@@ -1,0 +1,52 @@
+{
+  "id": "audiospec",
+  "category": "stego",
+  "name": "音频波形/频谱图",
+  "name_en": "audiospec.py",
+  "summary": "把 WAV 画成波形图和频谱图，纯标准库自带 FFT，专门用来看频谱藏字。",
+  "when": "题目给了音频文件（尤其 .wav），怀疑有频谱藏字或者要听/看静音段藏的摩斯码。",
+  "usage": [
+    {
+      "title": "直接出两张图",
+      "steps": [
+        "python -X utf8 audiospec.py 题目.wav",
+        "会生成 题目_wave.png（波形）和 题目_spec.png（频谱）",
+        "先看频谱图：如果有规则的笔画或方块，就是藏字"
+      ]
+    },
+    {
+      "title": "高频区放大看",
+      "steps": [
+        "python -X utf8 audiospec.py 题目.wav --spec --fmin 8000 --fmax 16000 --width 1600 --height 600",
+        "藏字常写在 8k-16k 这段人耳不敏感的区间，裁掉低频后笔画会清楚很多",
+        "还是看不清就把 --range-db 调小（比如 40），弱信号会更亮"
+      ]
+    },
+    {
+      "title": "只看某一段",
+      "code": "python -X utf8 audiospec.py 题目.wav --spec --start 2.5 --end 4.0 -o 片段.png"
+    },
+    {
+      "title": "分开看左右声道",
+      "code": "python -X utf8 audiospec.py 题目.wav --spec --channel R -o 右声道.png"
+    }
+  ],
+  "params": [
+    {"flag": "--spec", "desc": "只出频谱图"},
+    {"flag": "--wave", "desc": "只出波形图"},
+    {"flag": "--channel", "desc": "L/R/both，默认 both（双声道会叠加成一路）"},
+    {"flag": "--start / --end", "desc": "截取时间段（秒）"},
+    {"flag": "--fmin / --fmax", "desc": "只显示这一段频率（Hz），藏字常在高频"},
+    {"flag": "--n-fft", "desc": "STFT 窗长，默认 2048；调大频率分辨率高、时间分辨率低"},
+    {"flag": "--range-db", "desc": "显示多少 dB 动态范围，默认 90；调小能突出弱信号"},
+    {"flag": "--gamma", "desc": "亮度 gamma，默认 0.7；小于 1 提亮暗部"},
+    {"flag": "--width / --height", "desc": "输出尺寸"}
+  ],
+  "pitfalls": [
+    "只认 WAV。MP3/FLAC/OGG 会直接报「不是 WAV」，要先用 7zip 或音频工具转成 WAV，别指望脚本自动识别。",
+    "--channel both 会把左右声道平均成一路。如果出题人把字分别藏在左右两个声道（或者左右藏的是不同内容），叠加后可能互相抵消成一团糊，这种题必须用 --channel L 和 --channel R 各看一次。",
+    "频率轴默认铺满 0 到采样率一半。藏字通常只占很窄的一条，全谱显示时会被压成几个像素高的细线，一定要配合 --fmin/--fmax 放大。",
+    "纯 Python 算 FFT，长音频慢。默认 hop 是窗长的 1/4，10 分钟的音频会产生上万帧，跑之前先用 --start/--end 截一段；脚本在帧数超过 6000 时会提示。"
+  ],
+  "next": ["wireshark", "7zip"]
+}

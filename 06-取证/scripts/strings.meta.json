@@ -1,0 +1,50 @@
+{
+  "id": "strings",
+  "category": "forensics",
+  "name": "增强版 strings",
+  "name_en": "strings.py",
+  "summary": "同时扫 ASCII/UTF-8/UTF-16LE/BE 四种编码，支持正则过滤。",
+  "when": "在内存转储、PE、图片里找 flag；系统 strings 只认 ASCII 会漏一半。",
+  "usage": [
+    {
+      "title": "全编码扫描",
+      "code": "python -X utf8 strings.py 文件.bin"
+    },
+    {
+      "title": "正则过滤",
+      "code": "python -X utf8 strings.py 文件.bin -r \"flag\\{.*\\}\""
+    },
+    {
+      "title": "只看 UTF-16 + 带偏移",
+      "code": "python -X utf8 strings.py 文件.bin --enc utf16 --with-offset"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-m",
+      "desc": "最短字符串长度（默认 4）"
+    },
+    {
+      "flag": "-r",
+      "desc": "只输出匹配这个正则的"
+    },
+    {
+      "flag": "--enc",
+      "desc": "all/ascii/utf16/utf16be/cjk"
+    },
+    {
+      "flag": "--with-offset",
+      "desc": "显示每条的字节偏移"
+    }
+  ],
+  "pitfalls": [
+    "只提取连续可打印字符，被拆散的数据要先解密/解压",
+    "UTF-16 数据不一定 2 字节对齐，脚本两种相位都扫",
+    "不处理 GBK 等双字节编码"
+  ],
+  "next": [
+    "hexview",
+    "volatility3",
+    "cyberchef"
+  ]
+}

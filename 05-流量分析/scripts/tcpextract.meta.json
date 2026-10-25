@@ -1,0 +1,36 @@
+{
+  "id": "tcpextract",
+  "category": "traffic",
+  "name": "TCP 流重组导出",
+  "name_en": "tcpextract.py",
+  "summary": "按四元组分流、处理乱序重传后双向重组，导出 stream_N_client/server.txt。",
+  "when": "要把 pcap 里每条 TCP 会话分别落成文件、再按类型分拣或丢给其他工具分析时。",
+  "usage": [
+    {
+      "title": "列流后批量导出",
+      "steps": [
+        "python -X utf8 tcpextract.py 题目.pcap --list",
+        "python -X utf8 tcpextract.py 题目.pcap --all -o 导出目录",
+        "目录里会得到 stream_1_client.txt / stream_1_server.txt …"
+      ]
+    },
+    {
+      "title": "命令行",
+      "code": "python -X utf8 tcpextract.py 题目.pcap --stream 2 -o 导出"
+    }
+  ],
+  "params": [
+    {"flag": "--list", "desc": "列出所有流：客户端/服务端、端口、双向字节数"},
+    {"flag": "--stream N", "desc": "只导出第 N 条流"},
+    {"flag": "--all", "desc": "导出全部流到 -o 指定的目录"},
+    {"flag": "-o DIR", "desc": "输出目录，不存在会自动创建"},
+    {"flag": "--limit N", "desc": "单方向最多导出多少字节，默认 0 为不限"}
+  ],
+  "pitfalls": [
+    "序号回绕只告警不真正处理：超过 4GB 的流会跨 2^32 边界，拼接可能错位，这种题请用 tshark follow,tcp,raw",
+    "抓包丢掉的字节会如实留 0x00 并统计空洞数，不会假装数据完整；空洞位置在 stderr 里报",
+    "客户端是「先发 SYN 的那一方」；只有单向流量（没抓到握手）时按地址排序取第一个，可能标反",
+    "导出的 .txt 是原始字节不做编码转换，遇到二进制内容请用十六进制查看器再看"
+  ],
+  "next": ["wireshark", "tshark", "filetype"]
+}

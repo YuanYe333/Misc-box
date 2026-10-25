@@ -1,0 +1,50 @@
+{
+  "id": "qrcode",
+  "category": "code",
+  "name": "二维码识别",
+  "name_en": "qrcode.py",
+  "summary": "纯标准库的二维码解码器，不依赖 zbar/opencv，能从 PNG/BMP 里解出内容。",
+  "when": "题目给了一张二维码图片要解内容，但环境里没装扫码库；或者要确认二维码里到底藏了什么（含原始码字）。",
+  "usage": [
+    {
+      "title": "解一张二维码图片",
+      "steps": [
+        "python -X utf8 qrcode.py 题目.png",
+        "会打印定位图案、版本、纠错级别、掩码编号，最后给出解出的内容",
+        "PNG 和 BMP 都支持，含 RGB/RGBA 和调色板 PNG"
+      ]
+    },
+    {
+      "title": "黑底白码（反色图）",
+      "code": "python -X utf8 qrcode.py 反色.png --invert"
+    },
+    {
+      "title": "二值化阈值不对时手动指定",
+      "code": "python -X utf8 qrcode.py 模糊.png --threshold 128"
+    },
+    {
+      "title": "看原始码字（调试纠错问题）",
+      "code": "python -X utf8 qrcode.py 题目.png --hex"
+    },
+    {
+      "title": "打印模块矩阵（确认采样是否正确）",
+      "code": "python -X utf8 qrcode.py 题目.png --dump"
+    }
+  ],
+  "params": [
+    {"flag": "file", "desc": "PNG 或 BMP 图片路径（位置参数）"},
+    {"flag": "--dump", "desc": "打印二值化后的模块矩阵，用于确认采样有没有错位"},
+    {"flag": "--invert", "desc": "强制反色，处理黑底白码的图"},
+    {"flag": "--threshold", "desc": "手动二值化阈值 0-255，默认自动"},
+    {"flag": "--hex", "desc": "打印原始数据码字，用于判断纠错是否失败"}
+  ],
+  "pitfalls": [
+    "本工具只做解码，不生成二维码。要生成请用 CyberChef 的 Generate QR Code 操作或在线工具。",
+    "容量有硬上限：版本 1-L 的字节模式只能放 17 字节。内容超了会报「比特流不足（需要 8 位，剩余 4 位）」，这不是 bug——这个报错说明定位、版本、纠错级别都解对了，只是内容长度超出了该版本容量，出题人用了更大版本或更高级别。",
+    "解码依赖图片清晰。手机拍的、有透视变形或反光的照片大概率解不出来，先裁正放大；实在不行用手机扫码器转成文本。",
+    "彩色二维码（RGB/RGBA）支持，但要求前景背景对比明显，低对比度会二值化失败。",
+    "调色板 PNG（colortype 3）支持，但调色板里的透明色会被当背景，可能吃掉部分模块。",
+    "只支持 PNG 和 BMP，不接受 JPG。JPG 有损压缩会破坏模块边界，请先转成 PNG。"
+  ],
+  "next": ["imgsize", "stegodetect", "bases"]
+}

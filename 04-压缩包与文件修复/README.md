@@ -140,6 +140,11 @@ cmd /c copy /b 题目.zip.001 + 题目.zip.002 合并.zip
 | [hashcat](#hashcat) | 7.1.2 | GPU 口令爆破：字典/掩码/规则/组合，支持 300+ 哈希类型。 |
 | [Hashcat 面板](#hashcat-panel) | 1.0 | hashcat 图形外壳：自动识别 -m、内置「压缩包 → 提取哈希」、实时进度与日志。 |
 | [Strawberry Perl](#perl) | 5.42.3.1 | 便携版 Perl，用于运行 john 的 7z2john.pl、pdf2john.pl 等 Perl 脚本。 |
+| [CRC32 反推/修复](#crc32bf) | 1.0 | 已知 CRC32 反推短未知字节，或修 PNG 的 CRC。 |
+| [伪加密判定](#fakeenc) | 1.0 | 区分 ZIP/RAR 的伪加密与真加密。 |
+| [文件雕取](#filecarve) | 1.0 | 按文件头尾雕刻内嵌文件，轻量 binwalk 替代。 |
+| [文件类型识别](#filetype) | 1.0 | 按魔数识别真实类型，戳穿伪装扩展名。 |
+| [ZIP 结构体检](#zipfix) | 1.0 | ZIP 结构体检与中央目录重建。 |
 
 ---
 
@@ -489,5 +494,225 @@ John the Ripper → hashcat
 
 ---
 
+
+<a id="crc32bf"></a>
+
+## CRC32 反推/修复 · crc32bf.py
+
+**类型**：script  
+**位置**：`04-压缩包与文件修复/scripts/crc32bf.py`
+
+> 暴力反推 CRC32 缺失的短字节，或一键修复 PNG 所有块 CRC。
+
+### 什么时候用
+
+PNG 块 CRC 被改导致打不开，或已知 CRC 缺几个字符要还原。
+
+### 怎么用
+
+**反推缺失字节**
+
+```bat
+python -X utf8 crc32bf.py --prefix "AB" --crc 0x112787e6 --len 2
+```
+
+**修 PNG 的 CRC**
+
+```bat
+python -X utf8 crc32bf.py --fix-png 坏图.png -o 修好.png
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--prefix` | 已知的前缀内容 |
+| `--crc` | 目标 CRC32（0x 开头或十进制） |
+| `--len` | 缺失字节数（默认 2，超过 4 会很慢） |
+| `--charset` | printable/lower/upper/digit/alnum/hex/flag |
+
+### 踩坑提醒
+
+- 暴力枚举限制在 4 字节以内；4 字节 95^4 要跑几分钟
+- 只支持 CRC32（IEEE 0xEDB88320），不支持 CRC16/CRC64
+- --fix-png 只修 CRC，修不了「数据本身被改坏」
+
+---
+
+<a id="fakeenc"></a>
+
+## 伪加密判定 · fakeenc.py
+
+**类型**：script  
+**位置**：`04-压缩包与文件修复/scripts/fakeenc.py`
+
+> 判定 ZIP/RAR 是不是伪加密，ZIP 可一键清标志位直接解压。
+
+### 什么时候用
+
+压缩包要密码，但怀疑只是标志位被改（CTF 十次有八次是假的）。
+
+### 怎么用
+
+**先判定**
+
+```bat
+python -X utf8 fakeenc.py 可疑.zip
+```
+
+**清除伪加密**
+
+```bat
+python -X utf8 fakeenc.py 可疑.zip -o 明文.zip
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-o` | 清除伪加密后另存（仅 ZIP） |
+| `--force` | 允许覆盖已存在的输出文件 |
+
+### 踩坑提醒
+
+- 真加密（数据区确实是密文）无法破解，只报告
+- ZIP 的 AES 加密（method 99）不处理
+- RAR 只做检测不做修复（改了容易彻底坏掉）
+
+---
+
+<a id="filecarve"></a>
+
+## 文件雕取 · filecarve.py
+
+**类型**：script  
+**位置**：`04-压缩包与文件修复/scripts/filecarve.py`
+
+> 从裸数据里按魔数找出内嵌文件并切出来（binwalk 的轻量替代）。
+
+### 什么时候用
+
+镜像文件、内存转储、图片尾部疑似藏了 ZIP/PNG。
+
+### 怎么用
+
+**先扫描看有什么**
+
+```bat
+python -X utf8 filecarve.py 镜像.bin
+```
+
+**实际切出来**
+
+```bat
+python -X utf8 filecarve.py 镜像.bin -o 输出目录
+```
+
+**只看尾部附加数据**
+
+```bat
+python -X utf8 filecarve.py 图片.png --tail
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-o` | 把雕出的文件写到这个目录 |
+| `--tail` | 只显示第一个文件结束之后的附加数据 |
+| `--min-size` | 小于这个字节数的片段不雕（默认 16） |
+
+### 踩坑提醒
+
+- 只雕自带明确结束标记的格式（PNG/JPG/GIF/ZIP/PDF 等）
+- 没有长度字段又没结束标记的（如原始 PE 段）只报位置不雕
+- 一个文件被分成两段时会各雕一半，需要人工拼接
+
+---
+
+<a id="filetype"></a>
+
+## 文件类型识别 · filetype.py
+
+**类型**：script  
+**位置**：`04-压缩包与文件修复/scripts/filetype.py`
+
+> 按魔数判断文件真实类型，并检查扩展名是否骗人。
+
+### 什么时候用
+
+拿到可疑文件，第一步就该跑它——CTF 里扩展名几乎不可信。
+
+### 怎么用
+
+**看单个文件**
+
+```bat
+python -X utf8 filetype.py 可疑文件
+```
+
+**整目录递归**
+
+```bat
+python -X utf8 filetype.py 题目目录 -r
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-r` | 递归子目录 |
+| `-f` | 额外打印开头 32 字节的 hex |
+
+### 踩坑提醒
+
+- 魔数只是开头几字节，精心构造的文件可以让它撒谎
+- .txt 里其实是 PNG 是最典型的「扩展名骗人」，脚本会明确报出来
+- 分卷压缩包 .z01/.z02 的魔数和主包不同，已单独处理
+
+---
+
+<a id="zipfix"></a>
+
+## ZIP 结构体检 · zipfix.py
+
+**类型**：script  
+**位置**：`04-压缩包与文件修复/scripts/zipfix.py`
+
+> 逐条对账 ZIP 的中央目录/CRC/大小字段，能重建被删的中央目录。
+
+### 什么时候用
+
+解压报「压缩包已损坏」，或中央目录被截断、条目偏移错乱。
+
+### 怎么用
+
+**只体检**
+
+```bat
+python -X utf8 zipfix.py 坏包.zip
+```
+
+**重建中央目录**
+
+```bat
+python -X utf8 zipfix.py 坏包.zip --rebuild -o 重建.zip
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-o` | 修复后另存为这个文件 |
+| `--rebuild` | 按本地文件头重建中央目录 |
+| `--force` | 允许覆盖已存在的输出文件 |
+
+### 踩坑提醒
+
+- 不处理 ZIP64（超过 4GB 的包）
+- 数据区本身被破坏（压缩流残缺）无法还原，只能报告受影响条目
+- 重建只能恢复结构，恢复不了被覆盖的数据
+
+---
 
 ← 返回 [工具箱总览](../README.md)

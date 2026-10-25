@@ -1,0 +1,44 @@
+{
+  "id": "imgsize",
+  "category": "stego",
+  "name": "图片长宽校验",
+  "name_en": "imgsize.py",
+  "summary": "通过像素数据量与声明长宽对账，反推被篡改的真实宽高（PNG/BMP 严格，JPG 启发式）。",
+  "when": "图片显示异常、下半截是噪点、比例被拉伸，或怀疑 IHDR/SOF 被改过。",
+  "usage": [
+    {
+      "title": "拖拽（最省事）",
+      "steps": [
+        "把图片或文件夹拖到 03-隐写\\scripts\\imgsize.bat 上松手"
+      ]
+    },
+    {
+      "title": "命令行",
+      "code": "python -X utf8 imgsize.py 题目.png"
+    },
+    {
+      "title": "批量（递归）",
+      "code": "python -X utf8 imgsize.py 题目目录 -r"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-r",
+      "desc": "递归子目录"
+    },
+    {
+      "flag": "多路径",
+      "desc": "可一次传多个文件"
+    }
+  ],
+  "pitfalls": [
+    "必须加 -X utf8，否则中文路径乱码",
+    "pngcheck 在 CRC 被重算后完全漏检，本脚本靠数据量对账仍能发现",
+    "JPG 没有像素长度字段，只能靠底部中性灰填充带启发式判断"
+  ],
+  "next": [
+    "pngcheck",
+    "stegsolve",
+    "exiftool"
+  ]
+}

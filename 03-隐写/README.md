@@ -111,6 +111,10 @@ cd D:\杂项工具\foremost
 | [pngcheck 套件](#pngcheck) | 3.0.3 | PNG 结构校验、chunk 拆分、IDAT 窗口修复；能在任意文件里搜索并提取 PNG。 |
 | [StegSolve](#stegsolve) | 1.4 | 图片逐通道、逐位平面查看，Frame Browser 翻帧，Stereogram Solver 解立体图。 |
 | [ExifTool](#exiftool) | 13.59 | 读/写图片、文档、音视频元数据：GPS、作者、注释、隐藏字段。 |
+| [音频波形/频谱图](#audiospec) | 1.0 | 把 WAV 画成波形与频谱图，专看频谱藏字。 |
+| [LSB 隐写提取/写入](#lsb) | 1.0 | LSB 最低位提取/嵌入，自动遍历通道与位序。 |
+| [隐写总检](#stegodetect) | 1.0 | 隐写一键体检：尾部追加、异常 chunk、尺寸不符、内嵌文件。 |
+| [ZIP 隐写检测](#zipstego) | 1.0 | ZIP 隐写检查：伪加密、注释载荷、尾部数据、隐藏条目。 |
 
 ---
 
@@ -120,7 +124,7 @@ cd D:\杂项工具\foremost
 
 **版本**：1.0  
 **类型**：script  
-**位置**：`_脚本/imgsize.py`
+**位置**：`03-隐写/scripts/imgsize.py`
 
 > 通过像素数据量与声明长宽对账，反推被篡改的真实宽高（PNG/BMP 严格，JPG 启发式）。
 
@@ -377,5 +381,271 @@ imgsize 长宽校验
 
 ---
 
+
+<a id="audiospec"></a>
+
+## 音频波形/频谱图 · audiospec.py
+
+**类型**：script  
+**位置**：`03-隐写/scripts/audiospec.py`
+
+> 把 WAV 画成波形图和频谱图，纯标准库自带 FFT，专门用来看频谱藏字。
+
+### 什么时候用
+
+题目给了音频文件（尤其 .wav），怀疑有频谱藏字或者要听/看静音段藏的摩斯码。
+
+### 怎么用
+
+**直接出两张图**
+
+```bat
+python -X utf8 audiospec.py 题目.wav
+```
+
+- 会生成 题目_wave.png（波形）和 题目_spec.png（频谱）
+- 先看频谱图：如果有规则的笔画或方块，就是藏字
+
+**高频区放大看**
+
+```bat
+python -X utf8 audiospec.py 题目.wav --spec --fmin 8000 --fmax 16000 --width 1600 --height 600
+```
+
+- 藏字常写在 8k-16k 这段人耳不敏感的区间，裁掉低频后笔画会清楚很多
+- 还是看不清就把 --range-db 调小（比如 40），弱信号会更亮
+
+**只看某一段**
+
+```bat
+python -X utf8 audiospec.py 题目.wav --spec --start 2.5 --end 4.0 -o 片段.png
+```
+
+**分开看左右声道**
+
+```bat
+python -X utf8 audiospec.py 题目.wav --spec --channel R -o 右声道.png
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--spec` | 只出频谱图 |
+| `--wave` | 只出波形图 |
+| `--channel` | L/R/both，默认 both（双声道会叠加成一路） |
+| `--start / --end` | 截取时间段（秒） |
+| `--fmin / --fmax` | 只显示这一段频率（Hz），藏字常在高频 |
+| `--n-fft` | STFT 窗长，默认 2048；调大频率分辨率高、时间分辨率低 |
+| `--range-db` | 显示多少 dB 动态范围，默认 90；调小能突出弱信号 |
+| `--gamma` | 亮度 gamma，默认 0.7；小于 1 提亮暗部 |
+| `--width / --height` | 输出尺寸 |
+
+### 踩坑提醒
+
+- 只认 WAV。MP3/FLAC/OGG 会直接报「不是 WAV」，要先用 7zip 或音频工具转成 WAV，别指望脚本自动识别。
+- --channel both 会把左右声道平均成一路。如果出题人把字分别藏在左右两个声道（或者左右藏的是不同内容），叠加后可能互相抵消成一团糊，这种题必须用 --channel L 和 --channel R 各看一次。
+- 频率轴默认铺满 0 到采样率一半。藏字通常只占很窄的一条，全谱显示时会被压成几个像素高的细线，一定要配合 --fmin/--fmax 放大。
+- 纯 Python 算 FFT，长音频慢。默认 hop 是窗长的 1/4，10 分钟的音频会产生上万帧，跑之前先用 --start/--end 截一段；脚本在帧数超过 6000 时会提示。
+
+---
+
+<a id="lsb"></a>
+
+## LSB 隐写提取/写入 · lsb.py
+
+**类型**：script  
+**位置**：`03-隐写/scripts/lsb.py`
+
+> PNG/BMP 最低位提取与写入，自动穷举通道/位平面/位序组合并打分排序，可出位平面图。
+
+### 什么时候用
+
+拿到一张图怀疑像素最低位藏了数据，或要把 payload 反向写进图片时。
+
+### 怎么用
+
+**不知道参数时先自动试**
+
+```bat
+python -X utf8 lsb.py 图.png
+```
+
+- 脚本会穷举 通道×位平面×位序×布局 并按「像不像明文」打分排序
+- 看排第一的那条后面的「复现」命令，再精确提取
+
+**精确提取到文件**
+
+```bat
+python -X utf8 lsb.py 图.png --channel R --bit 0 --count 200
+```
+
+- 确认读出来的东西对，再加 -o 落地：python -X utf8 lsb.py 图.png --channel R --bit 0 -o out.bin
+
+**位平面可视化**
+
+```bat
+python -X utf8 lsb.py 图.png --plane 3 -o plane3.png
+```
+
+- 打开黑白图，白=该位为 1；有规则笔画就是藏了字
+
+**命令行**
+
+```bat
+python -X utf8 lsb.py 图.png --embed -f payload.bin -o 藏了东西.png
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--channel` | R/G/B/A/all/rgba，all 只含 RGB（Stegsolve 习惯） |
+| `--bit` | 位平面 0-7，0 是最低位 |
+| `--bit-order` | lsb/msb，先读到的位放输出字节的低位还是高位 |
+| `--layout` | row 逐像素RGB / bgr 逐像素BGR / planar 先整张R再G再B |
+| `--count` | 提取多少字节，0=全部容量 |
+| `--plane` | 输出第 N 位平面的黑白 PNG |
+| `--embed` | 写入模式，配 -f 或 --payload-text |
+| `--length-header` | 写入时加 4 字节长度头，自动模式能认出来 |
+
+### 踩坑提醒
+
+- --channel all 只含 RGB 不含 Alpha。这是 Stegsolve 的习惯，把 A 混进来会让正常题目直接读不出来；要读 Alpha 用 --channel A 或 rgba。
+- PNG 只支持 8-bit 非隔行。16-bit PNG 的最低位语义和 8-bit 完全不同（一个像素 16 位），强行按 8-bit 读出来是噪声，脚本会直接报错而不是瞎猜。
+- 调色板 PNG 会先展开成 RGBA 再取位。如果出题人是直接改调色板索引的 LSB，展开后就读不到了——这种题要先用别的方式还原索引。
+- 自动模式只抽样前 1KB 打分。如果藏的数据在第 2KB 之后才开始，或者开头有段乱码，可能排不到第一，要看完整候选列表。
+
+---
+
+<a id="stegodetect"></a>
+
+## 隐写总检 · stegodetect.py
+
+**类型**：script  
+**位置**：`03-隐写/scripts/stegodetect.py`
+
+> 一键盘查 PNG/JPEG/BMP/ZIP 的尾部附加、异常块、尺寸不符、内嵌文件和明文 flag，按可信度排序。
+
+### 什么时候用
+
+拿到一个可疑文件但不知道该往哪个方向查，先跑这个把明显的隐写痕迹全列出来。
+
+### 怎么用
+
+**先全检一遍**
+
+```bat
+python -X utf8 stegodetect.py 题目.png
+```
+
+- 结果按 [高]/[中]/[低] 排序，先只看 [高] 那几条
+- 如果报了「IEND 之后有附加数据」，用 --tail-dump 把那一段单独存出来再分析
+
+**两图对比找改动点**
+
+```bat
+python -X utf8 stegodetect.py --diff 原图.png 改过.png -o 差异.png
+```
+
+- 差异图会把不同像素放大 32 倍并标红，改动区域一眼可见
+- 输出里会写明最大通道差；差 1 通常就是 LSB 级改动
+
+**整目录扫一遍**
+
+```bat
+python -X utf8 stegodetect.py 附件目录/ -r
+```
+
+**导出尾部数据**
+
+```bat
+python -X utf8 stegodetect.py 题目.png --tail-dump -o tail.bin
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-r` | 递归子目录 |
+| `--diff A B` | 两张同尺寸图做像素级对比，输出差异图 |
+| `--tail-dump` | 把容器尾部（IEND/EOI 之后）的附加数据导出成文件 |
+| `-o` | 输出文件（配合 --diff / --tail-dump） |
+| `--no-amplify` | 差异图不放大，只按原始差值画 |
+| `-v` | 详细输出，含更多数据预览 |
+
+### 踩坑提醒
+
+- 「没有发现明显异常」不等于没有隐写。本脚本查的是容器层面的痕迹（尾部数据、块异常、尺寸不符、内嵌文件），LSB 隐写、频域隐写这类内容级手法不会留下任何结构痕迹，必须再用 lsb.py 或 stegsolve 看。
+- JPEG 天然存在多个 APP 段和 COM 段，数量多不代表有问题；脚本把 APP 段数量作为「低」优先级提示，别把它当成结论。
+- PNG 声明的像素数据比实际少，可能是出题人改了 IHDR 宽度或高度（常见手法），也可能只是编码器优化。判据是差值大小和尾部是否紧接数据，脚本会给出具体字节数让你自己判断。
+- 两图对比要求尺寸完全一致。尺寸不同时脚本直接报错，因为那本身就是线索（出题人裁过图），别急着去 resize。
+
+---
+
+<a id="zipstego"></a>
+
+## ZIP 隐写检测 · zipstego.py
+
+**类型**：script  
+**位置**：`03-隐写/scripts/zipstego.py`
+
+> 查 ZIP 伪加密、注释藏数据、EOCD 后附加数据、隐藏条目，并可一键修复伪加密。
+
+### 什么时候用
+
+ZIP 打开要密码但题目没给，或者怀疑 ZIP 里除了看得见的文件还藏了别的东西。
+
+### 怎么用
+
+**先体检**
+
+```bat
+python -X utf8 zipstego.py 题目.zip
+```
+
+- 看到「伪加密」就直接用 --clean 修；看到「注释里内嵌 ZIP」就用 --dump-comment 取出来
+- 结果按 [高]/[中]/[低] 排序，[高] 是确定性的
+
+**修复伪加密**
+
+```bat
+python -X utf8 zipstego.py 伪加密.zip --clean -o 修好了.zip
+```
+
+- 脚本只清标志位里的 bit0，字节数不变，CRC 和压缩数据都不动
+- 修完用 7zip 直接打开，不需要密码
+
+**导出注释**
+
+```bat
+python -X utf8 zipstego.py 题目.zip --dump-comment -o 注释.bin
+```
+
+**整目录扫**
+
+```bat
+python -X utf8 zipstego.py 附件目录/ -r
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--dump-comment` | 把 EOCD 注释导出成文件 |
+| `--clean` | 修复伪加密，必须配 -o 指定输出文件名 |
+| `-o` | 输出文件 |
+| `-r` | 目录递归 |
+| `-v` | 打印每个条目的 method/大小/加密状态 |
+| `--force` | 允许覆盖已存在文件 |
+
+### 踩坑提醒
+
+- 伪加密的判定看「本地头 flags」和「中央目录 flags」是否一致。只改一处的题（本地头置位、中央目录没置位）最坑：7-Zip 看中央目录直接就能解，Windows 资源管理器却弹密码框，两边现象不一样，别以为是文件坏了。
+- 真加密和伪加密都表现为「flags bit0 = 1」。脚本用「csize 是否比 usize 大至少 12 字节」来区分——真 ZipCrypto 会加 12 字节加密头。但如果出题人对存储方式（method=0）且内容恰好加密后长度不变做了特殊处理，这个判据会失准，此时脚本会明确说「无法确认」，不会硬改。
+- --clean 只动「已确认是伪加密」的条目。真加密的条目一律保留，否则会把本来能用密码解开的包改成彻底打不开。修完一定要先用 7zip 打开验证。
+- 注释长度字段是 16 位的，最大 65535。如果注释超长被截断，EOCD 的注释长度和实际剩余字节数会对不上，脚本会报「注释长度字段与实际不符」——这本身就是一条线索，别当成文件损坏。
+
+---
 
 ← 返回 [工具箱总览](../README.md)

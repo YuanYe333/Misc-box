@@ -1,0 +1,46 @@
+{
+  "id": "encscan",
+  "category": "code",
+  "name": "编码识别器",
+  "name_en": "encscan.py",
+  "summary": "扔一串看不懂的字符，列出最可能的编码并自动多层链式解码。",
+  "when": "拿到一串 base64/hex/摩斯/凯撒样式的字符串，不确定是什么编码时。",
+  "usage": [
+    {
+      "title": "直接给字符串",
+      "code": "python -X utf8 encscan.py \"SGVsbG8=\""
+    },
+    {
+      "title": "从文件读",
+      "code": "python -X utf8 encscan.py -f 密文.txt"
+    },
+    {
+      "title": "只看链式解码",
+      "code": "python -X utf8 encscan.py --deep \"5L2g5aW9\""
+    }
+  ],
+  "params": [
+    {
+      "flag": "-f",
+      "desc": "从文件读取（自动去掉 BOM）"
+    },
+    {
+      "flag": "--deep",
+      "desc": "只做多层链式解码"
+    },
+    {
+      "flag": "--top N",
+      "desc": "显示前 N 个候选（默认 5）"
+    }
+  ],
+  "pitfalls": [
+    "凯撒/栅栏这类靠自然语言判断的只能给候选，不能保证对",
+    "摩斯码依赖分隔符，点划被改写就认不出",
+    "文件带 BOM 会让 base64/hex 的字符集判定直接失败（脚本已自动剥掉）"
+  ],
+  "next": [
+    "cyberchef",
+    "bases",
+    "xor"
+  ]
+}

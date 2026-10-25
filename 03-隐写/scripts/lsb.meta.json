@@ -1,0 +1,53 @@
+{
+  "id": "lsb",
+  "category": "stego",
+  "name": "LSB 隐写提取/写入",
+  "name_en": "lsb.py",
+  "summary": "PNG/BMP 最低位提取与写入，自动穷举通道/位平面/位序组合并打分排序，可出位平面图。",
+  "when": "拿到一张图怀疑像素最低位藏了数据，或要把 payload 反向写进图片时。",
+  "usage": [
+    {
+      "title": "不知道参数时先自动试",
+      "steps": [
+        "python -X utf8 lsb.py 图.png",
+        "脚本会穷举 通道×位平面×位序×布局 并按「像不像明文」打分排序",
+        "看排第一的那条后面的「复现」命令，再精确提取"
+      ]
+    },
+    {
+      "title": "精确提取到文件",
+      "steps": [
+        "python -X utf8 lsb.py 图.png --channel R --bit 0 --count 200",
+        "确认读出来的东西对，再加 -o 落地：python -X utf8 lsb.py 图.png --channel R --bit 0 -o out.bin"
+      ]
+    },
+    {
+      "title": "位平面可视化",
+      "steps": [
+        "python -X utf8 lsb.py 图.png --plane 3 -o plane3.png",
+        "打开黑白图，白=该位为 1；有规则笔画就是藏了字"
+      ]
+    },
+    {
+      "title": "命令行",
+      "code": "python -X utf8 lsb.py 图.png --embed -f payload.bin -o 藏了东西.png"
+    }
+  ],
+  "params": [
+    {"flag": "--channel", "desc": "R/G/B/A/all/rgba，all 只含 RGB（Stegsolve 习惯）"},
+    {"flag": "--bit", "desc": "位平面 0-7，0 是最低位"},
+    {"flag": "--bit-order", "desc": "lsb/msb，先读到的位放输出字节的低位还是高位"},
+    {"flag": "--layout", "desc": "row 逐像素RGB / bgr 逐像素BGR / planar 先整张R再G再B"},
+    {"flag": "--count", "desc": "提取多少字节，0=全部容量"},
+    {"flag": "--plane", "desc": "输出第 N 位平面的黑白 PNG"},
+    {"flag": "--embed", "desc": "写入模式，配 -f 或 --payload-text"},
+    {"flag": "--length-header", "desc": "写入时加 4 字节长度头，自动模式能认出来"}
+  ],
+  "pitfalls": [
+    "--channel all 只含 RGB 不含 Alpha。这是 Stegsolve 的习惯，把 A 混进来会让正常题目直接读不出来；要读 Alpha 用 --channel A 或 rgba。",
+    "PNG 只支持 8-bit 非隔行。16-bit PNG 的最低位语义和 8-bit 完全不同（一个像素 16 位），强行按 8-bit 读出来是噪声，脚本会直接报错而不是瞎猜。",
+    "调色板 PNG 会先展开成 RGBA 再取位。如果出题人是直接改调色板索引的 LSB，展开后就读不到了——这种题要先用别的方式还原索引。",
+    "自动模式只抽样前 1KB 打分。如果藏的数据在第 2KB 之后才开始，或者开头有段乱码，可能排不到第一，要看完整候选列表。"
+  ],
+  "next": ["stegsolve", "pngcheck", "imgsize"]
+}

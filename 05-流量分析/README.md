@@ -159,6 +159,10 @@ cd D:\杂项工具\05-流量分析\nmap
 | --- | --- | --- |
 | [Wireshark / tshark](#tshark) | 4.7.4 | 流量分析标准工具：图形界面看包 + tshark 命令行批量处理。 |
 | [nmap](#nmap) | 7.992 | 端口扫描、服务与版本识别、OS 指纹、NSE 脚本引擎。 |
+| [DNS 导出与隧道识别](#dnsdump) | 1.0 | DNS 查询/应答全量导出，识别并解码 DNS 隧道。 |
+| [pcap 明文提取](#pcapcarve) | 1.0 | 解析 pcap/pcapng、重组 TCP、提取明文协议。 |
+| [TCP 流重组导出](#tcpextract) | 1.0 | 按四元组拆分并重组 TCP 双向流。 |
+| [USB HID 键盘鼠标还原](#usbhid) | 1.0 | 解码 USB HID 键盘/鼠标流量成按键序列与轨迹。 |
 
 ---
 
@@ -306,5 +310,210 @@ Wireshark / tshark
 
 ---
 
+
+<a id="dnsdump"></a>
+
+## DNS 导出与隧道识别 · dnsdump.py
+
+**类型**：script  
+**位置**：`05-流量分析/scripts/dnsdump.py`
+
+> 导出 pcap 里的 DNS 查询/响应，按超长子域名、编码标签、高频、TXT 异常打分找隧道，并能把隧道数据拼回来自动解码。
+
+### 什么时候用
+
+DNS 隧道题：域名一长串、查询量巨大、TXT 记录可疑，需要批量导出、定位可疑项并把隐藏数据还原出来时。
+
+### 怎么用
+
+**一步到位：拼接+解码（最常用）**
+
+```bat
+python -X utf8 dnsdump.py 题目.pcap --decode
+```
+
+- 脚本按根域名和编码类型分组拼接，自动试 base32/base64/hex
+
+**先看聚合再抓可疑**
+
+```bat
+python -X utf8 dnsdump.py 题目.pcap --stats
+```
+
+- python -X utf8 dnsdump.py 题目.pcap --tunnel
+
+**导出 CSV**
+
+```bat
+python -X utf8 dnsdump.py 题目.pcap --csv -o dns.csv
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--decode` | 把可疑标签按根域名+编码类型分组拼接，自动解码（找 flag 首选） |
+| `--tunnel` | 只输出隧道嫌疑分达标的项 |
+| `--threshold N` | 调整可疑阈值，默认 4.0，调低会更敏感 |
+| `--stats` | 按根域名输出查询/响应/NXDOMAIN 聚合表 |
+| `--csv` | 输出 CSV，便于丢进 Excel 或脚本二次处理 |
+| `-o FILE` | 写入文件，已存在需 --force |
+
+### 踩坑提醒
+
+- 隧道分是启发式打分，会误报；分数高只代表「值得看一眼」，不是判决
+- 同一域名下可能混有 base32 和 base64 两类数据，--decode 已按类型分开拼接，不要手动混拼
+- 只认端口 53 的标准 DNS，mDNS(5353)/LLMNR/DoH/DoT 一个都不处理
+- DNS over TCP 只拼接同一四元组的分段，跨连接的长报文可能解不全
+
+---
+
+<a id="pcapcarve"></a>
+
+## pcap 明文提取 · pcapcarve.py
+
+**类型**：script  
+**位置**：`05-流量分析/scripts/pcapcarve.py`
+
+> 自己解析 pcap/pcapng，按 TCP 流重组并提取 HTTP/FTP/Telnet/SMTP 明文内容。
+
+### 什么时候用
+
+拿到 .pcap/.pcapng 要捞 HTTP 响应体、FTP 传输、Telnet 明文，又不想开 Wireshark 时。
+
+### 怎么用
+
+**先列流再挑一条看**
+
+```bat
+python -X utf8 pcapcarve.py 题目.pcap --list
+```
+
+- python -X utf8 pcapcarve.py 题目.pcap --stream 3
+- 需要存档时加 -o 结果.txt
+
+**命令行**
+
+```bat
+python -X utf8 pcapcarve.py 题目.pcapng -o 全部内容.txt --force
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--list` | 只列所有 TCP 流（编号、端点、协议、字节数） |
+| `--stream N` | 只输出第 N 条流的内容 |
+| `--follow N` | 按抓包顺序交错显示第 N 条流的双向数据 |
+| `-o FILE` | 结果写入文件，已存在需 --force |
+| `--limit N` | 单段最多显示多少字节，默认 200000，0 为不限 |
+
+### 踩坑提醒
+
+- IP 分片重叠时按「先到先得」合并，不做 Wireshark 那种启发式裁决，结果可能与 tshark 略有差异
+- 流序号从 1 开始（按四元组首次出现顺序），与 tshark follow,tcp 的 0 基编号不同，别直接套用
+- 只处理 TCP；纯 UDP 的题（DNS 除外）看不到内容，加密流（TLS）导出来也是密文
+- HTTP 分块传输且抓包不完整时 chunked 解码会提前结束，响应体会比实际短
+
+---
+
+<a id="tcpextract"></a>
+
+## TCP 流重组导出 · tcpextract.py
+
+**类型**：script  
+**位置**：`05-流量分析/scripts/tcpextract.py`
+
+> 按四元组分流、处理乱序重传后双向重组，导出 stream_N_client/server.txt。
+
+### 什么时候用
+
+要把 pcap 里每条 TCP 会话分别落成文件、再按类型分拣或丢给其他工具分析时。
+
+### 怎么用
+
+**列流后批量导出**
+
+```bat
+python -X utf8 tcpextract.py 题目.pcap --list
+```
+
+- python -X utf8 tcpextract.py 题目.pcap --all -o 导出目录
+- 目录里会得到 stream_1_client.txt / stream_1_server.txt …
+
+**命令行**
+
+```bat
+python -X utf8 tcpextract.py 题目.pcap --stream 2 -o 导出
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--list` | 列出所有流：客户端/服务端、端口、双向字节数 |
+| `--stream N` | 只导出第 N 条流 |
+| `--all` | 导出全部流到 -o 指定的目录 |
+| `-o DIR` | 输出目录，不存在会自动创建 |
+| `--limit N` | 单方向最多导出多少字节，默认 0 为不限 |
+
+### 踩坑提醒
+
+- 序号回绕只告警不真正处理：超过 4GB 的流会跨 2^32 边界，拼接可能错位，这种题请用 tshark follow,tcp,raw
+- 抓包丢掉的字节会如实留 0x00 并统计空洞数，不会假装数据完整；空洞位置在 stderr 里报
+- 客户端是「先发 SYN 的那一方」；只有单向流量（没抓到握手）时按地址排序取第一个，可能标反
+- 导出的 .txt 是原始字节不做编码转换，遇到二进制内容请用十六进制查看器再看
+
+---
+
+<a id="usbhid"></a>
+
+## USB HID 键盘鼠标还原 · usbhid.py
+
+**类型**：script  
+**位置**：`05-流量分析/scripts/usbhid.py`
+
+> 解 usbmon/USBPcap 记录，从 HID 中断报告还原键盘输入（含 Shift/Ctrl）与鼠标轨迹图。
+
+### 什么时候用
+
+USB 流量题：给了抓 USB 总线的 pcap，要还原敲出的 flag 或鼠标画出的轨迹时。
+
+### 怎么用
+
+**先看设备分组**
+
+```bat
+python -X utf8 usbhid.py 题目.pcap --list
+```
+
+- python -X utf8 usbhid.py 题目.pcap --keyboard
+- 鼠标题改 --mouse -o 轨迹.png
+
+**命令行**
+
+```bat
+python -X utf8 usbhid.py 题目.pcap --all -o 轨迹.png
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--keyboard` | 只还原键盘，输出含 <CR>/<0x01> 等可见化控制字符 |
+| `--mouse` | 只还原鼠标轨迹，可用 -o 输出 PNG |
+| `--all` | 键盘鼠标都处理（默认行为） |
+| `--raw` | 额外打印每条 HID 原始报告十六进制，便于对照 |
+| `--device N` | 只看第 N 组设备，先用 --list 查编号 |
+| `-o FILE` | 鼠标轨迹图输出路径（PNG，纯 zlib 手写） |
+
+### 踩坑提醒
+
+- 抓包漏掉「松手」报告时，连打同一个字母（如 flag 里的 ll）只会出一个字符，这是数据缺失不是解码错
+- 只解中断传输（transfer_type=1）的 HID 报告，控制传输里的 GET_REPORT/SET_REPORT 不处理
+- 标准 8 字节 boot 报告才可靠；6 字节或 NKRO 位图报告会走兼容分支并给出警告，结果需人工核对
+- 鼠标只还原相对位移，触摸板/数位板这类绝对坐标设备解不出来
+
+---
 
 ← 返回 [工具箱总览](../README.md)

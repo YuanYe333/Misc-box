@@ -1,0 +1,38 @@
+{
+  "id": "filetype",
+  "category": "archive",
+  "name": "文件类型识别",
+  "name_en": "filetype.py",
+  "summary": "按魔数判断文件真实类型，并检查扩展名是否骗人。",
+  "when": "拿到可疑文件，第一步就该跑它——CTF 里扩展名几乎不可信。",
+  "usage": [
+    {
+      "title": "看单个文件",
+      "code": "python -X utf8 filetype.py 可疑文件"
+    },
+    {
+      "title": "整目录递归",
+      "code": "python -X utf8 filetype.py 题目目录 -r"
+    }
+  ],
+  "params": [
+    {
+      "flag": "-r",
+      "desc": "递归子目录"
+    },
+    {
+      "flag": "-f",
+      "desc": "额外打印开头 32 字节的 hex"
+    }
+  ],
+  "pitfalls": [
+    "魔数只是开头几字节，精心构造的文件可以让它撒谎",
+    ".txt 里其实是 PNG 是最典型的「扩展名骗人」，脚本会明确报出来",
+    "分卷压缩包 .z01/.z02 的魔数和主包不同，已单独处理"
+  ],
+  "next": [
+    "filecarve",
+    "cyberchef",
+    "binwalk"
+  ]
+}

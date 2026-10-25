@@ -109,6 +109,11 @@ vol -f memory.raw -o 输出目录 windows.filescan
 | [binwalk](#binwalk) | 2.3.4 | 文件签名扫描、自动提取嵌套文件、熵分析找加密/压缩段。 |
 | [foremost](#foremost) | 1.5.7 | 按文件头尾雕刻恢复，比 binwalk -e 更激进的 carve 工具。 |
 | [Volatility 3](#volatility3) | 2.28.2 | 内存镜像取证事实标准：进程、网络连接、注册表、凭据、文件系统全可挖。 |
+| [NTFS 已删除文件枚举](#deleted) | 1.0 | 分析已删除文件痕迹与可恢复性。 |
+| [十六进制查看器](#hexview) | 1.0 | 带 ASCII 侧栏的十六进制查看器，支持跳转与搜索。 |
+| [元数据体检/清除](#metawipe) | 1.0 | 读/清元数据，检查 GPS、作者、注释等隐藏字段。 |
+| [增强版 strings](#strings) | 1.0 | 增强版 strings，同时抓 ASCII/UTF-8/UTF-16LE/BE。 |
+| [文件时间线](#timeline) | 1.0 | 按时间戳排序文件，重建操作时间线，可导出 CSV。 |
 
 ---
 
@@ -315,5 +320,240 @@ binwalk
 
 ---
 
+
+<a id="deleted"></a>
+
+## NTFS 已删除文件枚举 · deleted.py
+
+**类型**：script  
+**位置**：`06-取证/scripts/deleted.py`
+
+> 直接解析 $MFT，列出已删除但记录还在的文件名/大小/时间。
+
+### 什么时候用
+
+取证要查「这个盘上原来有什么、被删了什么」。
+
+### 怎么用
+
+**读卷（需管理员）**
+
+```bat
+python -X utf8 deleted.py --drive D
+```
+
+**解析 MFT 镜像**
+
+```bat
+python -X utf8 deleted.py --mft MFT.dd --csv 已删除.csv
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--drive` | 盘符，如 D（需管理员权限） |
+| `--mft` | MFT 镜像文件 |
+| `--csv` | 输出 CSV |
+| `--all` | 连在用的记录一起列出 |
+
+### 踩坑提醒
+
+- --drive 需要管理员权限，否则明确报错
+- 只列出记录，不恢复数据；能否恢复取决于数据簇是否被覆盖
+- 只支持 NTFS，FAT/exFAT 不适用
+
+---
+
+<a id="hexview"></a>
+
+## 十六进制查看器 · hexview.py
+
+**类型**：script  
+**位置**：`06-取证/scripts/hexview.py`
+
+> 看字节、跳偏移、搜十六进制/文本，带 ASCII 侧栏。
+
+### 什么时候用
+
+要确认某个偏移是什么、搜 flag 在哪、改文件头前先看一眼。
+
+### 怎么用
+
+**看开头**
+
+```bat
+python -X utf8 hexview.py 文件.bin
+```
+
+**跳偏移看一段**
+
+```bat
+python -X utf8 hexview.py 文件.bin -o 0x100 -n 512
+```
+
+**搜字节/文本**
+
+```bat
+python -X utf8 hexview.py 文件.bin -s 504b0304
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-o` | 起始偏移（支持 0x100） |
+| `-n` | 显示字节数（默认 256） |
+| `-s` | 搜索十六进制字节串 |
+| `-t` | 搜索文本（UTF-8 与 UTF-16LE 都试） |
+
+### 踩坑提醒
+
+- 只读，不能改字节（改字节请用专门的编辑器）
+- 超大文件搜索会全量读入内存
+
+---
+
+<a id="metawipe"></a>
+
+## 元数据体检/清除 · metawipe.py
+
+**类型**：script  
+**位置**：`06-取证/scripts/metawipe.py`
+
+> 挖出 JPEG/PNG/GIF 里的 EXIF/GPS/注释/缩略图，并可无损清除。
+
+### 什么时候用
+
+怀疑图片藏了 GPS/设备信息/内嵌缩略图，或发图前要去隐私。
+
+### 怎么用
+
+**体检**
+
+```bat
+python -X utf8 metawipe.py 图片.jpg
+```
+
+**清除并另存**
+
+```bat
+python -X utf8 metawipe.py 图片.jpg --strip -o 干净.jpg
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--strip` | 清除元数据（需配 -o） |
+| `-o` | 清除后另存为这个文件 |
+| `--force` | 允许覆盖已存在的输出文件 |
+
+### 踩坑提醒
+
+- EXIF 里的缩略图常是原图副本，能还原被裁剪掉的内容
+- --strip 只删元数据段不动图像数据，所以画质无损
+- 不处理 HEIC/RAW/PDF（这些用 exiftool）
+
+---
+
+<a id="strings"></a>
+
+## 增强版 strings · strings.py
+
+**类型**：script  
+**位置**：`06-取证/scripts/strings.py`
+
+> 同时扫 ASCII/UTF-8/UTF-16LE/BE 四种编码，支持正则过滤。
+
+### 什么时候用
+
+在内存转储、PE、图片里找 flag；系统 strings 只认 ASCII 会漏一半。
+
+### 怎么用
+
+**全编码扫描**
+
+```bat
+python -X utf8 strings.py 文件.bin
+```
+
+**正则过滤**
+
+```bat
+python -X utf8 strings.py 文件.bin -r "flag\{.*\}"
+```
+
+**只看 UTF-16 + 带偏移**
+
+```bat
+python -X utf8 strings.py 文件.bin --enc utf16 --with-offset
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `-m` | 最短字符串长度（默认 4） |
+| `-r` | 只输出匹配这个正则的 |
+| `--enc` | all/ascii/utf16/utf16be/cjk |
+| `--with-offset` | 显示每条的字节偏移 |
+
+### 踩坑提醒
+
+- 只提取连续可打印字符，被拆散的数据要先解密/解压
+- UTF-16 数据不一定 2 字节对齐，脚本两种相位都扫
+- 不处理 GBK 等双字节编码
+
+---
+
+<a id="timeline"></a>
+
+## 文件时间线 · timeline.py
+
+**类型**：script  
+**位置**：`06-取证/scripts/timeline.py`
+
+> 把目录下所有文件的 mtime/atime/ctime 汇总成一条可排序时间线。
+
+### 什么时候用
+
+要还原「先创建了哪个、后来改了什么」的操作顺序。
+
+### 怎么用
+
+**按修改时间排序**
+
+```bat
+python -X utf8 timeline.py 目录
+```
+
+**按访问时间**
+
+```bat
+python -X utf8 timeline.py 目录 --sort atime
+```
+
+**限时间区间 + 导出 CSV**
+
+```bat
+python -X utf8 timeline.py 目录 --since 2026-01-01 --csv 时间线.csv
+```
+
+### 参数速查
+
+| 参数 | 说明 |
+| --- | --- |
+| `--sort` | mtime/atime/ctime |
+| `--since/--until` | 时间区间过滤 |
+| `--csv` | 导出 CSV 便于 Excel 分析 |
+
+### 踩坑提醒
+
+- Windows 的 ctime 是「创建时间」，Linux 上是「inode 变更时间」，含义不同
+- 不解析 NTFS 的双时间戳（那要直接读 MFT，见 deleted.py）
+- 时间戳可被程序伪造，不能作为唯一证据
+
+---
 
 ← 返回 [工具箱总览](../README.md)

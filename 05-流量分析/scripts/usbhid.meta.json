@@ -1,0 +1,37 @@
+{
+  "id": "usbhid",
+  "category": "traffic",
+  "name": "USB HID 键盘鼠标还原",
+  "name_en": "usbhid.py",
+  "summary": "解 usbmon/USBPcap 记录，从 HID 中断报告还原键盘输入（含 Shift/Ctrl）与鼠标轨迹图。",
+  "when": "USB 流量题：给了抓 USB 总线的 pcap，要还原敲出的 flag 或鼠标画出的轨迹时。",
+  "usage": [
+    {
+      "title": "先看设备分组",
+      "steps": [
+        "python -X utf8 usbhid.py 题目.pcap --list",
+        "python -X utf8 usbhid.py 题目.pcap --keyboard",
+        "鼠标题改 --mouse -o 轨迹.png"
+      ]
+    },
+    {
+      "title": "命令行",
+      "code": "python -X utf8 usbhid.py 题目.pcap --all -o 轨迹.png"
+    }
+  ],
+  "params": [
+    {"flag": "--keyboard", "desc": "只还原键盘，输出含 <CR>/<0x01> 等可见化控制字符"},
+    {"flag": "--mouse", "desc": "只还原鼠标轨迹，可用 -o 输出 PNG"},
+    {"flag": "--all", "desc": "键盘鼠标都处理（默认行为）"},
+    {"flag": "--raw", "desc": "额外打印每条 HID 原始报告十六进制，便于对照"},
+    {"flag": "--device N", "desc": "只看第 N 组设备，先用 --list 查编号"},
+    {"flag": "-o FILE", "desc": "鼠标轨迹图输出路径（PNG，纯 zlib 手写）"}
+  ],
+  "pitfalls": [
+    "抓包漏掉「松手」报告时，连打同一个字母（如 flag 里的 ll）只会出一个字符，这是数据缺失不是解码错",
+    "只解中断传输（transfer_type=1）的 HID 报告，控制传输里的 GET_REPORT/SET_REPORT 不处理",
+    "标准 8 字节 boot 报告才可靠；6 字节或 NKRO 位图报告会走兼容分支并给出警告，结果需人工核对",
+    "鼠标只还原相对位移，触摸板/数位板这类绝对坐标设备解不出来"
+  ],
+  "next": ["wireshark", "tshark", "cyberchef"]
+}

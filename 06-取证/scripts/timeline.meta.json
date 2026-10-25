@@ -1,0 +1,46 @@
+{
+  "id": "timeline",
+  "category": "forensics",
+  "name": "文件时间线",
+  "name_en": "timeline.py",
+  "summary": "把目录下所有文件的 mtime/atime/ctime 汇总成一条可排序时间线。",
+  "when": "要还原「先创建了哪个、后来改了什么」的操作顺序。",
+  "usage": [
+    {
+      "title": "按修改时间排序",
+      "code": "python -X utf8 timeline.py 目录"
+    },
+    {
+      "title": "按访问时间",
+      "code": "python -X utf8 timeline.py 目录 --sort atime"
+    },
+    {
+      "title": "限时间区间 + 导出 CSV",
+      "code": "python -X utf8 timeline.py 目录 --since 2026-01-01 --csv 时间线.csv"
+    }
+  ],
+  "params": [
+    {
+      "flag": "--sort",
+      "desc": "mtime/atime/ctime"
+    },
+    {
+      "flag": "--since/--until",
+      "desc": "时间区间过滤"
+    },
+    {
+      "flag": "--csv",
+      "desc": "导出 CSV 便于 Excel 分析"
+    }
+  ],
+  "pitfalls": [
+    "Windows 的 ctime 是「创建时间」，Linux 上是「inode 变更时间」，含义不同",
+    "不解析 NTFS 的双时间戳（那要直接读 MFT，见 deleted.py）",
+    "时间戳可被程序伪造，不能作为唯一证据"
+  ],
+  "next": [
+    "deleted",
+    "exiftool",
+    "volatility3"
+  ]
+}

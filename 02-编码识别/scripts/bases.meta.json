@@ -1,0 +1,52 @@
+{
+  "id": "bases",
+  "category": "code",
+  "name": "Base 系列编解码",
+  "name_en": "bases.py",
+  "summary": "Base16/32/58/64/85/91/100 一键互转，还能自动识别一串密文是哪种 Base。",
+  "when": "看到一串只有字母数字的密文（尤其以 = 结尾、或只有 0-9a-zA-Z 没有 +/），不知道是哪种 Base，或者要批量解码。",
+  "usage": [
+    {
+      "title": "先让脚本自己认",
+      "steps": [
+        "python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9",
+        "脚本会列出每种 Base 的置信度，排第一的就是最可能的",
+        "置信度不是 1.0 时说明有歧义（比如 Base32 和 Base58 的字符集有重叠），看第二名"
+      ]
+    },
+    {
+      "title": "确认了就指定解码",
+      "code": "python -X utf8 bases.py ZmxhZ3tiYXNlNjRfb2t9 -d base64"
+    },
+    {
+      "title": "编码",
+      "code": "python -X utf8 bases.py --encode base64 flag{test}"
+    },
+    {
+      "title": "处理文件",
+      "code": "python -X utf8 bases.py -f 密文.txt -d base32 -o 明文.bin"
+    },
+    {
+      "title": "换自定义字母表（Base64 变种题）",
+      "steps": [
+        "python -X utf8 bases.py 密文 -d base64 --alphabet 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'",
+        "标准表是 A-Za-z0-9+/，题目常把表打乱，用 --alphabet 传入题目给的表"
+      ]
+    }
+  ],
+  "params": [
+    {"flag": "-d / --decode", "desc": "指定解码方式：base16/base32/base58/base64/base85/base91/base100"},
+    {"flag": "--encode", "desc": "编码，后面跟方式名"},
+    {"flag": "--alphabet", "desc": "自定义字母表（变种题必用）"},
+    {"flag": "-f / --file", "desc": "从文件读输入"},
+    {"flag": "-o / --output", "desc": "写到文件"},
+    {"flag": "--all", "desc": "把所有能解的 Base 都解一遍"}
+  ],
+  "pitfalls": [
+    "自动识别只是给置信度，不是断言。Base32（A-Z2-7）和 Base58（去掉 0OIl）字符集有重叠，短密文经常两个都像；Base64 和 Base58 也是。密文越长越准，几个字符的别信排序。",
+    "Base64 的 = 补位会被脚本容忍（自动补齐），但 Base32 的补位规则不同，解出来长度不对时先检查是不是漏了 =。",
+    "Base91 和 Base100 不是标准库的，是脚本自己实现的。Base100 用 emoji 编码，粘贴时如果被聊天软件吃掉字符会直接解不出来——遇到 emoji 题先用文件传，别复制粘贴。",
+    "解码结果是二进制时脚本会提示「不是文本」，这时候要用 -o 存成文件再用 filetype.py 看真实类型，别当文本硬看。"
+  ],
+  "next": ["encscan", "filetype", "xor"]
+}
