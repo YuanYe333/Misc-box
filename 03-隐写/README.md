@@ -48,7 +48,7 @@ pngcheck 会报 `No errors detected`——完全查不出来。**所以必须配
 ```powershell
 # 拖拽：把图片拖到 _脚本\imgsize.bat 上
 # 命令行：
-C:\Users\<你>\AppData\Local\Python\pythoncore-3.14-64\python.exe -X utf8 ^
+$env:LOCALAPPDATA\Python\pythoncore-3.14-64\python.exe -X utf8 ^
   D:\杂项工具\_脚本\imgsize.py 题目.png
 ```
 

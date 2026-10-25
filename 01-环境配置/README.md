@@ -19,7 +19,7 @@ Microsoft Store 版或精简版可能没有 tkinter，启动器就跑不起来�
 
 ```powershell
 # 方式一：git
-git clone https://github.com/<you>/miscbox.git D:\杂项工具
+git clone https://github.com/YuanYe333/Misc-box.git D:\杂项工具
 
 # 方式二：下载 ZIP 后解压到 D:\杂项工具
 ```
@@ -297,7 +297,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\杂项工具\_box\setup.p
 
 ```powershell
 # Pillow（图片处理）
-C:\Users\<你>\AppData\Local\Python\pythoncore-3.14-64\python.exe -m pip install pillow ^
+$env:LOCALAPPDATA\Python\pythoncore-3.14-64\python.exe -m pip install pillow ^
   -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Volatility 3
@@ -322,7 +322,7 @@ Python 运行时不靠这行定位，所以**看到乱码不等于坏了**，不
 判断一个 venv 是否健康，看实际行为而不是看 `pyvenv.cfg`：
 
 ```powershell
-# 应输出 C:\Users\<你>\AppData\Local\Temp（或你的系统临时目录）
+# 应输出 $env:TEMP（即 C:\Users\<你的用户名>\AppData\Local\Temp）
 # 若输出的是工具箱目录本身，才是真的坏了
 D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -c "import tempfile; print(tempfile.gettempdir())"
 ```
@@ -350,7 +350,7 @@ D:\杂项工具\06-取证\volatility3\venv\Scripts\python.exe -c "import tempfil
 > 但这是可选项，不是必须。中文路径在实测中工作正常。
 
 **Volatility 3 的符号缓存**默认写到 `%APPDATA%\volatility3\`
-（`C:\Users\<你>\AppData\Roaming\volatility3\`）。首次运行会生成
+（`$env:APPDATA\volatility3\`）。首次运行会生成
 `identifier.cache`；若该目录不可写，才会出现 `unable to open database file`。
 可以用 `--cache-path` 指定别处。
 

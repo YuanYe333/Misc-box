@@ -14,11 +14,10 @@
 
 下载本仓库后跑一个脚本，工具会从各自官方源拉到本地；然后双击启动器就能用。
 
-> 下面的 `YOUR-NAME` 是占位符，换成你实际 fork 或 clone 的仓库地址即可。
-> 如果只是本地使用，也可以直接下载 ZIP 解压，跳过 git。
+> 也可以直接下载 ZIP 解压，跳过 git。
 
 ```
-git clone https://github.com/YOUR-NAME/miscbox.git D:\杂项工具
+git clone https://github.com/YuanYe333/Misc-box.git D:\杂项工具
 cd D:\杂项工具
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 ```
@@ -38,7 +37,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 ### 方式 A：只想要框架（自己已有工具）
 
 ```powershell
-git clone https://github.com/YOUR-NAME/miscbox.git D:\杂项工具
+git clone https://github.com/YuanYe333/Misc-box.git D:\杂项工具
 # 把你的工具按分类目录放进去，或用 tools.json 指向已有路径
 double-click D:\杂项工具\_box\启动器.bat
 ```
@@ -48,7 +47,7 @@ double-click D:\杂项工具\_box\启动器.bat
 ### 方式 B：从零一键配置
 
 ```powershell
-git clone https://github.com/YOUR-NAME/miscbox.git D:\杂项工具
+git clone https://github.com/YuanYe333/Misc-box.git D:\杂项工具
 cd D:\杂项工具
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1 -Interactive
 ```
