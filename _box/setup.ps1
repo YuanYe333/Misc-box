@@ -272,9 +272,18 @@ $summary = [pscustomobject]@{
 $payload = [pscustomobject]@{ summary = $summary; checks = $checks }
 try {
     $payload | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $ReportPath -Encoding UTF8
-    Write-Host ("Report written: {0}" -f $ReportPath) -ForegroundColor DarkGray
+    # -Json mode must emit nothing but JSON on stdout, otherwise a caller doing
+    #   setup.ps1 -Json | ConvertFrom-Json
+    # gets "Invalid JSON primitive: Report". Keep the human hint off stdout.
+    if (-not $Json) {
+        Write-Host ("Report written: {0}" -f $ReportPath) -ForegroundColor DarkGray
+    }
 } catch {
-    Write-Host ("Could not write report: {0}" -f $_.Exception.Message) -ForegroundColor Red
+    if ($Json) {
+        [Console]::Error.WriteLine(("Could not write report: {0}" -f $_.Exception.Message))
+    } else {
+        Write-Host ("Could not write report: {0}" -f $_.Exception.Message) -ForegroundColor Red
+    }
 }
 
 if ($Json) {

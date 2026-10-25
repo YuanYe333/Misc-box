@@ -121,7 +121,15 @@ class Tool:
         if kind == "none":
             return True
         target = self.launch.get("target") or self.raw.get("path", "")
-        return resolve(self.root, target).exists()
+        if resolve(self.root, target).exists():
+            return True
+        # 有些工具的 launch.target 是一个 .bat 启动器（volatility3、theHarvester），
+        # 真正的产物在 path 里（venv\Scripts\vol.exe）。启动器没生成时不该把
+        # 已经装好的工具显示成红点——这里回退到 path 再判一次。
+        real = self.raw.get("path", "")
+        if real and real != target:
+            return resolve(self.root, real).exists()
+        return False
 
 
 def build_tools(cfg: dict[str, Any]) -> list[Tool]:
@@ -161,6 +169,29 @@ def launch_tool(tool: Tool) -> tuple[bool, str]:
         return False, "该条目仅用于说明，无需启动。"
 
     if not target.exists():
+        # 启动器（.bat）没生成，但真实产物在：退回到直接启动产物，
+        # 不要因为少一个 .bat 就把装好的工具判定为不可用。
+        real_raw = tool.raw.get("path", "")
+        real = resolve(tool.root, real_raw) if real_raw else None
+        if real and real.exists() and real != target:
+            try:
+                if real.suffix.lower() == ".exe":
+                    _run([str(real)], cwd=real.parent)
+                    return True, f"已启动：{real.name}（启动器缺失，已直接调用）"
+                if real.suffix.lower() == ".bat":
+                    _run(["cmd", "/c", "start", "", str(real)], cwd=real.parent)
+                    return True, f"已启动：{real.name}"
+            except OSError as exc:
+                return False, (
+                    f"启动器不存在：{target}\n"
+                    f"直接调用 {real.name} 也失败：{exc}\n"
+                    f"请运行 scripts\\bootstrap.ps1 重新生成启动器。"
+                )
+            return False, (
+                f"启动器不存在：{target}\n"
+                f"程序本体在：{real}\n"
+                f"请运行 scripts\\bootstrap.ps1 重新生成启动器。"
+            )
         return False, f"文件不存在：{target}\n请先运行「环境自检」或检查是否被移动。"
 
     try:

@@ -4,6 +4,16 @@
 
 ## 第一件事：先摸底，别急着看包
 
+> **命令里的 `tshark` 是简写。** 本工具箱**不改系统 PATH**，Wireshark 安装时
+> 默认也不勾「加入 PATH」，所以直接敲 `tshark` 多数机器会报找不到命令。
+> 用完整路径：
+>
+> ```powershell
+> $tshark = 'C:\Program Files\Wireshark\tshark.exe'
+> ```
+>
+> 下文所有示例都按 `tshark` 书写，请自行替换成 `& $tshark`。
+
 ```powershell
 # 1. 协议分层统计——先知道这包在干什么
 tshark -r 题目.pcap -q -z io,phs

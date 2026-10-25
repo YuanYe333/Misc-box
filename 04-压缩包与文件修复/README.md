@@ -4,7 +4,15 @@
 
 ## 排查顺序（先诊断再动手）
 
-```
+> **命令里的 `7z` 是简写。** 本工具箱**不改系统 PATH**，所以直接敲 `7z` 会报
+> 「不是内部或外部命令」。两种正确用法：
+>
+> - 本机已装 7-Zip：用完整路径 `& 'C:\Program Files\7-Zip\7z.exe'`
+> - 只用便携版：`& 'D:\杂项工具\CTF-tools\7zip\7z.exe'`
+>
+> 下面的示例为了可读性都写成 `7z`，请按上面的方式替换。
+
+```powershell
 1. 7z l            看里面有什么（不解压）
 2. 7z l -slt       看加密标记 / 压缩方式 / CRC
 3. 7z t            测完整性，判断是不是文件损坏
@@ -21,12 +29,15 @@
 ### 7-Zip：诊断主力
 
 ```powershell
-7z l 题目.zip                  # 列表
-7z l -slt 题目.zip             # 技术详情（看 Encrypted / Method / CRC）
-7z t 题目.zip                  # 完整性测试
-7z x 题目.zip -o输出           # 解压（-o 后无空格！）
-7z x -p密码 题目.zip           # 带密码
-7z x 题目.zip flag.txt         # 只解单个文件
+# 先把路径存成变量，后面照抄就不会踩 PATH 的坑
+$7z = 'C:\Program Files\7-Zip\7z.exe'      # 或便携版 CTF-tools\7zip\7z.exe
+
+& $7z l 题目.zip                  # 列表
+& $7z l -slt 题目.zip             # 技术详情（看 Encrypted / Method / CRC）
+& $7z t 题目.zip                  # 完整性测试
+& $7z x 题目.zip -o输出           # 解压（-o 后无空格！）
+& $7z x -p密码 题目.zip           # 带密码
+& $7z x 题目.zip flag.txt         # 只解单个文件
 ```
 
 ### 伪加密：不用爆破
@@ -36,7 +47,7 @@ ZIP 伪加密的本质是**通用位标记（general purpose bit flag）第 0 �
 
 **判断方法**：
 ```powershell
-7z l -slt 题目.zip | findstr /i "Encrypted"
+& $7z l -slt 题目.zip | findstr /i "Encrypted"
 # 显示 Encrypted = + 但解压时 7z 直接成功 → 伪加密
 # 或：用 010Editor 看本地文件头 offset 6-7 字节
 ```

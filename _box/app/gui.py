@@ -5,7 +5,9 @@
 """
 from __future__ import annotations
 
+import json
 import os
+import subprocess
 import sys
 import tkinter as tk
 from pathlib import Path
@@ -98,9 +100,34 @@ class MiscBoxApp(tk.Tk):
                       font=(FONT, 8), anchor="w")
         ph.pack(fill="x", padx=16, pady=(0, 8))
 
-        # 分类按钮容器
+        # 分类按钮容器：先 pack 底部，再 pack 分类区，否则分类区会先吃掉
+        # 全部纵向空间，把底部按钮挤成 1px（pack 按调用顺序分配剩余空间）。
+        bottom = tk.Frame(self.left, bg=PANEL)
+        bottom.pack(side="bottom", fill="x", padx=14, pady=12)
+        tk.Frame(bottom, bg=CARD, height=1).pack(fill="x", pady=(0, 10))
+
+        # 「补齐缺失」放在自检上面：新手看到红点后最想知道的是「怎么装」，
+        # 而不是「哪里错了」。只统计 auto=True 的条目——手动工具下载不了。
+        self.btn_fill = tk.Label(bottom, text="⬇  补齐缺失工具", bg=ACCENT, fg=BG,
+                                 font=(FONT, 10, "bold"), pady=7, cursor="hand2")
+        self.btn_fill.pack(fill="x")
+        self.btn_fill.bind("<Button-1>", lambda e: self._install_missing())
+        self.btn_fill.bind("<Enter>", lambda e: self.btn_fill.config(bg=ACCENT_DIM))
+        self.btn_fill.bind("<Leave>", lambda e: self.btn_fill.config(bg=ACCENT))
+
+        btn_env = tk.Label(bottom, text="⚙  环境自检", bg=CARD, fg=TEXT,
+                           font=(FONT, 10), pady=7, cursor="hand2")
+        btn_env.pack(fill="x", pady=(6, 0))
+        btn_env.bind("<Button-1>", lambda e: self._run_setup())
+        btn_env.bind("<Enter>", lambda e: btn_env.config(bg=CARD_HOVER))
+        btn_env.bind("<Leave>", lambda e: btn_env.config(bg=CARD))
+
+        tk.Label(bottom, text=f"根目录 {self.root_dir}", bg=PANEL, fg=TEXT_DIM,
+                 font=(FONT, 8), anchor="w", wraplength=200).pack(fill="x", pady=(10, 0))
+
+        # 分类按钮容器（在底部之后 pack，剩余空间归它）
         self.cat_frame = tk.Frame(self.left, bg=PANEL)
-        self.cat_frame.pack(fill="x", padx=8)
+        self.cat_frame.pack(fill="both", expand=True, padx=8)
         self._cat_buttons: dict[str, tk.Label] = {}
         for c in self.cats:
             row = tk.Frame(self.cat_frame, bg=PANEL, cursor="hand2")
@@ -118,20 +145,6 @@ class MiscBoxApp(tk.Tk):
                 w.bind("<Enter>", lambda e, r=row, l=lbl, n=num, cid=c["id"]: self._cat_hover(r, l, n, cid, True))
                 w.bind("<Leave>", lambda e, r=row, l=lbl, n=num, cid=c["id"]: self._cat_hover(r, l, n, cid, False))
             self._cat_buttons[c["id"]] = lbl
-
-        # 底部
-        bottom = tk.Frame(self.left, bg=PANEL)
-        bottom.pack(side="bottom", fill="x", padx=14, pady=12)
-        tk.Frame(bottom, bg=CARD, height=1).pack(fill="x", pady=(0, 10))
-        btn_env = tk.Label(bottom, text="⚙  环境自检", bg=CARD, fg=TEXT,
-                           font=(FONT, 10), pady=7, cursor="hand2")
-        btn_env.pack(fill="x")
-        btn_env.bind("<Button-1>", lambda e: self._run_setup())
-        btn_env.bind("<Enter>", lambda e: btn_env.config(bg=CARD_HOVER))
-        btn_env.bind("<Leave>", lambda e: btn_env.config(bg=CARD))
-
-        tk.Label(bottom, text=f"根目录 {self.root_dir}", bg=PANEL, fg=TEXT_DIM,
-                 font=(FONT, 8), anchor="w", wraplength=200).pack(fill="x", pady=(10, 0))
 
         # 右侧
         self.right = tk.Frame(self, bg=BG)
@@ -433,6 +446,96 @@ class MiscBoxApp(tk.Tk):
             self._launch(t)
         else:
             messagebox.showinfo("提示", "未找到环境自检脚本。", parent=self)
+
+    # ------------------------------------------------------------ 补齐缺失
+
+    def _manifest(self) -> dict | None:
+        """读取 scripts/tools-manifest.json（bootstrap 的唯一数据源）。"""
+        p = self.root_dir / "scripts" / "tools-manifest.json"
+        if not p.exists():
+            return None
+        try:
+            with open(p, "r", encoding="utf-8-sig") as fh:
+                return json.load(fh)
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _missing_auto(self) -> list[dict]:
+        """返回「可自动下载但当前缺失」的条目。
+
+        判定用 manifest 自己的 target/entry，而不是 tools.json 的 launch.target，
+        因为后者可能指向一个 .bat 启动器（如 volatility3），而真正判断
+        「装没装」要看 venv 里的 exe。
+        """
+        man = self._manifest()
+        if not man:
+            return []
+        out: list[dict] = []
+        for t in man.get("tools", []):
+            if not t.get("auto"):
+                continue
+            target = (t.get("target") or "").replace("/", os.sep)
+            entry = (t.get("entry") or "").replace("/", os.sep)
+            if not target or not entry:
+                continue
+            p = Path(entry) if os.path.isabs(entry) else (self.root_dir / target / entry)
+            if not p.exists():
+                out.append(t)
+        return out
+
+    def _install_missing(self) -> None:
+        missing = self._missing_auto()
+        manual_note = ""
+        man = self._manifest()
+        if man:
+            n_manual = sum(
+                1 for t in man.get("tools", [])
+                if not t.get("auto") and not self._entry_exists(t)
+            )
+            if n_manual:
+                manual_note = f"\n\n另有 {n_manual} 个工具需手动获取（授权或需编译），不会自动下载。"
+
+        if not missing:
+            messagebox.showinfo("无需补齐",
+                                "所有可自动下载的工具都已就位。" + manual_note,
+                                parent=self)
+            return
+
+        names = "\n".join(f"  · {t.get('name')}  {t.get('version', '')}" for t in missing)
+        if not messagebox.askyesno(
+            "补齐缺失工具",
+            f"以下 {len(missing)} 个工具缺失，将从官方地址下载：\n\n{names}"
+            f"{manual_note}\n\n继续吗？",
+            parent=self,
+        ):
+            return
+
+        boot = self.root_dir / "scripts" / "bootstrap.ps1"
+        if not boot.exists():
+            messagebox.showwarning("缺少脚本",
+                                   f"找不到 {boot}\n请确认仓库完整。", parent=self)
+            return
+
+        # -Yes 表示「全部装」，不给逐个确认；GUI 已经把清单给用户看过了。
+        # 用新控制台窗口跑，下载进度和报错用户都能看到。
+        try:
+            subprocess.Popen(
+                ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                 "-File", str(boot), "-Yes"],
+                cwd=str(self.root_dir),
+                creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0),
+            )
+            self.status(f"正在下载 {len(missing)} 个工具，请稍候……")
+        except Exception as exc:  # noqa: BLE001
+            messagebox.showwarning("启动失败", str(exc), parent=self)
+
+    def _entry_exists(self, t: dict) -> bool:
+        target = (t.get("target") or "").replace("/", os.sep)
+        entry = (t.get("entry") or "").replace("/", os.sep)
+        if not target or not entry:
+            return False
+        p = Path(entry) if os.path.isabs(entry) else (self.root_dir / target / entry)
+        return p.exists()
 
     def status(self, text: str) -> None:
         self.cat_desc.config(text=text)
