@@ -224,8 +224,8 @@
       "extract": "pip",
       "target": "binwalk",
       "entry": "binwalk.bat",
-      "auto": false,
-      "note": "Needs a Windows compatibility patch before it installs. See 06-取证/README.md."
+      "auto": true,
+      "note": "pip install, then scripts/bootstrap.ps1 applies the Windows compatibility patch automatically (sitecustomize.py + _winconfig/extract.conf + binwalk.bat). See 06-取证/README.md."
     },
     {
       "id": "npcap",

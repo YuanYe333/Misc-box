@@ -249,9 +249,9 @@ $env:LOCALAPPDATA\\Python\\pythoncore-3.14-64\\python.exe -X utf8 ^
 ### 5. 附加数据 / 嵌套文件：binwalk + foremost
 
 ```powershell
-.\\binwalk\\binwalk.bat 题目.png        # 看有没有嵌别的文件
-.\\binwalk\\binwalk.bat -e 题目.png     # 自动提取
-# binwalk 失败时用 foremost 兜底：
+.\\binwalk\\binwalk.bat 题目.png                    # 看有没有嵌别的文件
+.\\binwalk\\binwalk.bat -e -C 输出目录 题目.png      # 自动提取（产物在输出目录）
+# 固件类文件系统（squashfs 等）Windows 解不了，用 foremost 兜底：
 cd D:\\杂项工具\\foremost
 .\\foremost.exe -t png -i 题目.png -o 输出目录
 ```
@@ -275,7 +275,7 @@ cd D:\\杂项工具\\foremost
 2. **imgsize 忘了 `-X utf8`**——中文路径会乱码导致找不到文件。
 3. **StegSolve 双击没反应**——先 `java -version` 确认 Java 在。
 4. **改长宽后要重算 CRC**——否则 pngcheck 报错，等于告诉出题人你改过。
-5. **binwalk -e 在 Windows 上部分规则失败**——失败不是工具坏了，换 foremost。
+5. **binwalk 选了「扫描签名」却没产物**——那个预设只列结构，要选「扫描并自动提取」。
 
 ## 下一步
 
@@ -542,17 +542,28 @@ cd D:\\杂项工具\\05-流量分析\\nmap
 ## 1. binwalk：结构扫描
 
 ```powershell
-.\\binwalk\\binwalk.bat 题目.bin          # 签名扫描（看有几个文件）
-.\\binwalk\\binwalk.bat -e 题目.bin       # 自动提取
-.\\binwalk\\binwalk.bat -E 题目.bin       # 熵分析（找加密/压缩段）
-.\\binwalk\\binwalk.bat -A 题目.bin       # 找可执行代码段
+.\\binwalk\\binwalk.bat 题目.bin                    # 签名扫描（看有几个文件）
+.\\binwalk\\binwalk.bat -e -C 输出目录 题目.bin      # 自动提取（产物落到输出目录）
+.\\binwalk\\binwalk.bat -e -M -C 输出目录 题目.bin   # 递归提取（提取物里还有嵌套）
+.\\binwalk\\binwalk.bat -E 题目.bin                  # 熵分析（找加密/压缩段）
+.\\binwalk\\binwalk.bat -A 题目.bin                  # 找可执行代码段
 ```
 
 **熵分析怎么读**：熵接近 8.0 = 加密或已压缩；熵接近 0 = 全零填充。
 熵图上的突变点往往就是文件边界。
 
-⚠️ `-e` 的提取依赖外部工具（7z、dd），Windows 上部分规则会失败。
-**失败时用 foremost 兜底，不是工具坏了。**
+⚠️ 界面里必须选 **「扫描并自动提取」** 这个预设；选「扫描签名」只会列出结构、不产出文件。
+
+**Windows 上的提取能力边界**（本机已适配）：
+
+| 类型 | 能不能解出来 | 用什么 |
+| --- | --- | --- |
+| gzip / zlib / lzma | ✅ | binwalk 内置 python 插件 |
+| zip / tar / xz / bz2 / 7z / rar / iso / cab | ✅ | 7-Zip、JDK 的 `jar`、Windows 自带 `tar` |
+| squashfs / cramfs / jffs2 / ubifs / yaffs | ❌ 只能雕刻 | 需要 Linux 专用工具，换 WSL 或 foremost 兜底 |
+
+提取规则由 `binwalk\\_winconfig\\binwalk\\config\\extract.conf` 提供（`binwalk.bat` 用
+`XDG_CONFIG_HOME` 指过去），不要去改 site-packages 里那份 Linux 规则。
 
 ## 2. foremost：文件雕刻
 
@@ -619,7 +630,7 @@ vol -f memory.raw -o 输出目录 windows.filescan
 
 ## 常见陷阱
 
-1. **binwalk -e 失败 ≠ 工具坏**：Windows 上提取规则依赖 7z/dd，失败换 foremost。
+1. **binwalk 提取不出 squashfs/cramfs/jffs2**：Linux 专用解包器 Windows 上没有，只能雕刻，换 foremost 或 WSL。
 2. **foremost 输出目录必须空**：否则直接报错退出。
 3. **Volatility 首次跑某系统版本要下载符号表**：需要网络，离线环境要预置 symbols。
 4. **`vol` 报 `unable to open database file`**：`%APPDATA%` 不可写，用工具箱的启动 bat（已把缓存指到 `_box\\cache`）。

@@ -3425,7 +3425,7 @@
       "params": [
         {
           "flag": "-e",
-          "desc": "自动提取（结果在 _题目.bin.extracted/）"
+          "desc": "自动提取（产物在本次运行的输出目录）"
         },
         {
           "flag": "-E",
@@ -3441,9 +3441,10 @@
         }
       ],
       "pitfalls": [
-        "必须用 binwalk.bat（自带 UTF-8 环境，能处理中文路径）",
+        "必须用 binwalk.bat（自带 UTF-8 环境 + 已修好 Windows 下 -e 的崩溃）",
         "装在独立虚拟环境 binwalk/Scripts/python.exe，不要 pip 装进系统 Python",
-        "-e 依赖外部工具（7z/dd），Windows 上部分规则失败，失败时用 foremost 兜底"
+        "-e 的外部解包器已改为本机的 7-Zip / jar / tar；产物落在本次运行输出目录，不在 binwalk 目录",
+        "squashfs/cramfs/jffs2 等 Linux 固件文件系统在 Windows 上只能雕刻、不能解包，需要时用 foremost 兜底"
       ],
       "next": [
         "foremost",
@@ -3477,6 +3478,28 @@
             "title": "扫描并自动提取",
             "argv": [
               "-e",
+              "-C",
+              "{outdir}",
+              "{file}"
+            ]
+          },
+          {
+            "title": "递归提取（-e -M）",
+            "argv": [
+              "-e",
+              "-M",
+              "-C",
+              "{outdir}",
+              "{file}"
+            ]
+          },
+          {
+            "title": "显示提取规则命中情况（-v）",
+            "argv": [
+              "-e",
+              "-v",
+              "-C",
+              "{outdir}",
               "{file}"
             ]
           }
